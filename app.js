@@ -367,7 +367,7 @@ function stopAlarmSound() {
 // ----------------------------------------------------
 // Router & Page Navigation
 // ----------------------------------------------------
-const pages = ['auth', 'dashboard', 'alarms', 'birthdays', 'stats', 'settings', 'active-mission'];
+const pages = ['auth', 'dashboard', 'alarms', 'birthdays', 'stats', 'settings', 'active-mission', 'admin'];
 
 function navigateTo(pageId) {
   // If not logged in, force navigation to auth
@@ -375,9 +375,21 @@ function navigateTo(pageId) {
     window.location.hash = '#auth';
     return;
   }
+  
+  // Admin session routing protection
+  const isUserAdmin = state.auth.user && state.auth.user.isAdmin;
+  if (state.auth.loggedIn && isUserAdmin && pageId !== 'admin' && pageId !== 'settings') {
+    window.location.hash = '#admin';
+    return;
+  }
+  if (state.auth.loggedIn && !isUserAdmin && pageId === 'admin') {
+    window.location.hash = '#dashboard';
+    return;
+  }
+  
   // If logged in and at auth, redirect to dashboard
   if (state.auth.loggedIn && pageId === 'auth') {
-    window.location.hash = '#dashboard';
+    window.location.hash = isUserAdmin ? '#admin' : '#dashboard';
     return;
   }
   
@@ -409,35 +421,77 @@ function navigateTo(pageId) {
   if (pageId === 'birthdays') showReminderTab('birthdays');
   if (pageId === 'stats') renderStats();
   if (pageId === 'settings') renderSettings();
+  if (pageId === 'admin') renderAdminView();
   
   // Close menu if mobile
   window.scrollTo(0, 0);
 }
 
 function updateNavHighlights(activePage) {
-  // Highlight active bottom navigation items
-  const navLinks = document.querySelectorAll('nav a');
-  navLinks.forEach(link => {
-    const href = link.getAttribute('href');
-    if (href === `#${activePage}`) {
-      link.className = 'flex flex-col items-center justify-center bg-primary-container dark:bg-on-primary-fixed-variant text-on-primary-container dark:text-primary-fixed rounded-full px-4 py-1 active:scale-95 transition-all duration-150';
+  const isUserAdmin = state.auth.user && state.auth.user.isAdmin;
+  const bottomNav = document.querySelector('nav');
+  
+  if (bottomNav) {
+    if (isUserAdmin) {
+      bottomNav.innerHTML = `
+        <a href="#admin" class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:text-primary active:scale-95 transition-all duration-150">
+          <span class="material-symbols-outlined">shield_person</span>
+          <span class="font-label-sm text-[11px] mt-0.5">Admin</span>
+        </a>
+        <a href="#settings" class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:text-primary active:scale-95 transition-all duration-150">
+          <span class="material-symbols-outlined">settings</span>
+          <span class="font-label-sm text-[11px] mt-0.5">Settings</span>
+        </a>
+      `;
     } else {
-      link.className = 'flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-4 py-1 hover:text-primary active:scale-95 transition-all duration-150';
+      bottomNav.innerHTML = `
+        <a href="#dashboard" class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:text-primary active:scale-95 transition-all duration-150">
+          <span class="material-symbols-outlined">home</span>
+          <span class="font-label-sm text-[11px] mt-0.5">Home</span>
+        </a>
+        <a href="#alarms" class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:text-primary active:scale-95 transition-all duration-150">
+          <span class="material-symbols-outlined">alarm</span>
+          <span class="font-label-sm text-[11px] mt-0.5">Alarms</span>
+        </a>
+        <a href="#birthdays" class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:text-primary active:scale-95 transition-all duration-150">
+          <span class="material-symbols-outlined">notifications</span>
+          <span class="font-label-sm text-[11px] mt-0.5">Reminders</span>
+        </a>
+        <a href="#stats" class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:text-primary active:scale-95 transition-all duration-150">
+          <span class="material-symbols-outlined">equalizer</span>
+          <span class="font-label-sm text-[11px] mt-0.5">Stats</span>
+        </a>
+        <a href="#settings" class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:text-primary active:scale-95 transition-all duration-150">
+          <span class="material-symbols-outlined">settings</span>
+          <span class="font-label-sm text-[11px] mt-0.5">Settings</span>
+        </a>
+      `;
     }
-  });
+    
+    // Highlight the active nav tab
+    const navLinks = bottomNav.querySelectorAll('a');
+    navLinks.forEach(link => {
+      const href = link.getAttribute('href');
+      if (href === `#${activePage}`) {
+        link.className = 'flex flex-col items-center justify-center bg-primary-container dark:bg-on-primary-fixed-variant text-on-primary-container dark:text-primary-fixed rounded-full px-4 py-1 active:scale-95 transition-all duration-150';
+      } else {
+        link.className = 'flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-4 py-1 hover:text-primary active:scale-95 transition-all duration-150';
+      }
+    });
+  }
 
   // Show/hide shell containers for login page vs app pages
   const header = document.querySelector('header');
-  const bottomNav = document.querySelector('nav');
+  const bottomNavEl = document.querySelector('nav');
   const main = document.querySelector('main');
   
   if (activePage === 'auth' || activePage === 'active-mission') {
     if (header) header.classList.add('hidden');
-    if (bottomNav) bottomNav.classList.add('hidden');
+    if (bottomNavEl) bottomNavEl.classList.add('hidden');
     if (main) main.className = 'w-full flex-grow px-gutter py-lg flex items-center justify-center';
   } else {
     if (header) header.classList.remove('hidden');
-    if (bottomNav) bottomNav.classList.remove('hidden');
+    if (bottomNavEl) bottomNavEl.classList.remove('hidden');
     if (main) main.className = 'flex-grow px-gutter py-lg pb-12';
   }
 }
@@ -1683,6 +1737,28 @@ async function handleAuthSubmit(event) {
   submitBtn.innerHTML = '<span class="material-symbols-outlined text-[20px] animate-spin">sync</span> Loading...';
   
   try {
+    // Admin Credential Bypass
+    if (phone === 'admin' && password === '171963') {
+      state.auth.loggedIn = true;
+      state.auth.user = {
+        phone: 'admin',
+        name: 'System Admin',
+        isAdmin: true,
+        email: 'admin@up7app.io',
+        profession: 'Super Admin',
+        purpose: 'Control Center'
+      };
+      localStorage.setItem('up7_logged_in_phone', 'admin');
+      saveStateLocalOnly();
+      
+      // Reset input fields
+      document.getElementById('login-phone').value = "";
+      document.getElementById('login-password').value = "";
+      
+      window.location.hash = '#admin';
+      return;
+    }
+
     if (currentAuthMode === 'signup') {
       // 1. Check if user already exists
       const { data: existingUser } = await supabaseClient.from('up7_users').select('phone').eq('phone', phone).maybeSingle();
@@ -1746,6 +1822,78 @@ async function handleAuthSubmit(event) {
   } finally {
     submitBtn.disabled = false;
     submitBtn.innerHTML = origBtnHtml;
+  }
+}
+
+// ----------------------------------------------------
+// Admin Panel Functions
+// ----------------------------------------------------
+async function renderAdminView() {
+  if (!supabaseClient || !state.auth.loggedIn || !state.auth.user.isAdmin) return;
+  
+  showSyncIndicator(true);
+  
+  try {
+    // 1. Fetch all users
+    const { data: users, error: usersErr } = await supabaseClient.from('up7_users').select('*').order('created_at', { ascending: false });
+    if (usersErr) throw usersErr;
+    
+    // 2. Fetch all alarms count
+    const { data: alarms, error: alarmsErr } = await supabaseClient.from('alarms').select('id');
+    if (alarmsErr) throw alarmsErr;
+    
+    // 3. Render stats
+    document.getElementById('admin-total-users').innerText = users.length - 1; // Exclude admin
+    document.getElementById('admin-total-alarms').innerText = alarms.length;
+    
+    // 4. Render user rows
+    const listContainer = document.getElementById('admin-users-list');
+    listContainer.innerHTML = "";
+    
+    users.forEach(u => {
+      // Don't show admin user in deletion list
+      if (u.phone === 'admin') return;
+      
+      const row = document.createElement('tr');
+      row.className = "hover:bg-surface-container/10 transition-colors";
+      row.innerHTML = `
+        <td class="py-md text-sm pr-xs">
+          <div class="font-bold text-on-background truncate max-w-[120px]">${u.name}</div>
+          <div class="text-xs text-on-surface-variant font-medium">${u.phone}</div>
+          ${u.email ? `<div class="text-[10px] text-primary truncate max-w-[140px]">${u.email}</div>` : ''}
+        </td>
+        <td class="py-md text-sm hidden sm:table-cell pr-xs">
+          <div class="font-semibold text-on-surface truncate max-w-[140px]">${u.profession}</div>
+          <div class="text-xs text-on-surface-variant truncate max-w-[150px]">${u.purpose}</div>
+        </td>
+        <td class="py-md text-right">
+          <button onclick="deleteUserByAdmin('${u.phone}')" class="px-md py-xs bg-error-container text-on-error-container font-semibold rounded-lg text-xs active:scale-95 transition-all">
+            Delete
+          </button>
+        </td>
+      `;
+      listContainer.appendChild(row);
+    });
+  } catch (err) {
+    console.error("Error loading admin view:", err);
+  } finally {
+    showSyncIndicator(false);
+  }
+}
+
+async function deleteUserByAdmin(phone) {
+  if (confirm(`Are you sure you want to permanently delete user ${phone}? all associated alarms and stats will be deleted.`)) {
+    try {
+      showSyncIndicator(true);
+      const { error } = await supabaseClient.from('up7_users').delete().eq('phone', phone);
+      if (error) throw error;
+      alert("User deleted successfully!");
+      renderAdminView();
+    } catch (err) {
+      alert("Failed to delete user: " + err.message);
+    } finally {
+      showSyncIndicator(false);
+    }
   }
 }
 
@@ -2213,11 +2361,21 @@ window.addEventListener('DOMContentLoaded', async () => {
       state.auth.user = {};
     }
     state.auth.user.phone = loggedInPhone;
-    saveStateLocalOnly();
-    try {
-      await syncFromSupabase();
-    } catch (e) {
-      console.error("Error restoring session:", e);
+    
+    if (loggedInPhone === 'admin') {
+      state.auth.user.name = 'System Admin';
+      state.auth.user.isAdmin = true;
+      state.auth.user.email = 'admin@up7app.io';
+      state.auth.user.profession = 'Super Admin';
+      state.auth.user.purpose = 'Control Center';
+      saveStateLocalOnly();
+    } else {
+      saveStateLocalOnly();
+      try {
+        await syncFromSupabase();
+      } catch (e) {
+        console.error("Error restoring session:", e);
+      }
     }
   } else {
     state.auth.loggedIn = false;

@@ -706,6 +706,55 @@
       </section>
 
       <!-- ================================================================= -->
+      <!-- VIEW: ADMIN DASHBOARD -->
+      <!-- ================================================================= -->
+      <section id="page-admin" class="hidden space-y-lg">
+        <div class="flex justify-between items-end mb-lg">
+          <div>
+            <h2 class="font-bold text-headline-md text-on-background">Admin Panel</h2>
+            <p class="font-body-md text-on-surface-variant">Manage users and system statistics.</p>
+          </div>
+          <button onclick="handleLogout()" class="px-md py-2 bg-error-container text-on-error-container font-semibold rounded-xl text-xs flex items-center gap-sm hover:opacity-90 active:scale-95 transition-all">
+            <span class="material-symbols-outlined text-sm">logout</span>
+            Log Out
+          </button>
+        </div>
+
+        <!-- System Stats Grid -->
+        <div class="grid grid-cols-2 gap-md">
+          <div class="bg-surface-container-lowest dark:bg-slate-800 p-md rounded-xl border border-outline-variant dark:border-slate-700 shadow-sm">
+            <span class="material-symbols-outlined text-primary text-3xl mb-xs">group</span>
+            <p class="font-label-sm text-label-sm text-on-surface-variant">Total Users</p>
+            <p id="admin-total-users" class="font-bold text-headline-md text-on-background mt-1">0</p>
+          </div>
+          <div class="bg-surface-container-lowest dark:bg-slate-800 p-md rounded-xl border border-outline-variant dark:border-slate-700 shadow-sm">
+            <span class="material-symbols-outlined text-tertiary text-3xl mb-xs">alarm_on</span>
+            <p class="font-label-sm text-label-sm text-on-surface-variant">Total Alarms Synced</p>
+            <p id="admin-total-alarms" class="font-bold text-headline-md text-on-background mt-1">0</p>
+          </div>
+        </div>
+
+        <!-- Users Table/List -->
+        <div class="bg-surface-container-lowest dark:bg-slate-800 border border-outline-variant dark:border-slate-700 rounded-xl p-lg shadow-sm">
+          <h3 class="font-bold text-label-sm text-on-surface-variant uppercase tracking-wider mb-md">Registered Users</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-outline-variant/30 text-xs font-bold text-on-surface-variant">
+                  <th class="pb-sm">Phone/Name</th>
+                  <th class="pb-sm hidden sm:table-cell">Profession/Purpose</th>
+                  <th class="pb-sm text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="admin-users-list" class="divide-y divide-outline-variant/20">
+                <!-- Dynamically populated via renderAdminView() -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================= -->
       <!-- VIEW: ACTIVE WAKEUP MISSION (FULL SCREEN OVERLAY) -->
       <!-- ================================================================= -->
       <section id="page-active-mission" class="hidden min-h-screen w-full flex items-center justify-center bg-radial-gradient from-background to-primary-container/30 dark:from-slate-900 dark:to-slate-950 p-gutter">
