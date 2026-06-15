@@ -1731,7 +1731,11 @@ async function handleAuthSubmit(event) {
     window.location.hash = '#dashboard';
   } catch (err) {
     console.error("Auth process error:", err);
-    alert("Authentication failed: " + err.message);
+    if (err.message && err.message.toLowerCase().includes("confirm")) {
+      alert("Authentication Failed: Email confirmation is required by default on new Supabase projects.\n\nTo fix this:\n1. Check your email inbox (and spam folder) for the verification link.\n2. OR go to your Supabase Dashboard -> Authentication -> Providers -> Email, and turn OFF 'Confirm email' so you can sign up and login instantly.");
+    } else {
+      alert("Authentication failed: " + err.message);
+    }
   } finally {
     submitBtn.disabled = false;
     submitBtn.innerHTML = origBtnHtml;
