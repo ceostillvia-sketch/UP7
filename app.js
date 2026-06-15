@@ -40,6 +40,18 @@ const DEFAULT_STATE = {
   }
 };
 
+// Supabase Client Connection
+const supabaseUrl = 'https://pwvfvpmmrjrdftdnxfge.supabase.co';
+const supabaseKey = 'sb_publishable_k0MVkk3GxiCTpWN-e7j8Aw_38sGD3T7';
+let supabaseClient = null;
+try {
+  if (window.supabase) {
+    supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+  }
+} catch (e) {
+  console.error("Failed to initialize Supabase client:", e);
+}
+
 let state = JSON.parse(localStorage.getItem('up7_state')) || DEFAULT_STATE;
 
 // Ensure fallback attributes exist in loaded state
@@ -53,9 +65,232 @@ state.tasks = state.tasks || [
   { id: 2, title: "Review Daily Reminders", date: new Date().toISOString().split('T')[0], time: "09:00", notified: false }
 ];
 
-// Save state to localStorage
-function saveState() {
+// Save state to localStorage only
+function saveStateLocalOnly() {
   localStorage.setItem('up7_state', JSON.stringify(state));
+}
+
+// Save state and trigger background sync
+function saveState() {
+  saveStateLocalOnly();
+  if (state.auth.loggedIn) {
+    syncToSupabase();
+  }
+}
+
+// Global flag to prevent write loops during remote fetch updates
+let isSyncing = false;
+
+function showSyncIndicator(syncing) {
+  const indicator = document.getElementById('sync-status-indicator');
+  const icon = document.getElementById('sync-icon');
+  const text = document.getElementById('sync-text');
+  if (!indicator || !icon || !text) return;
+  
+  if (state.auth.loggedIn) {
+    indicator.classList.remove('hidden');
+    if (syncing) {
+      icon.innerText = "sync";
+      icon.className = "material-symbols-outlined text-[18px] text-primary animate-spin";
+      text.innerText = "Syncing...";
+    } else {
+      icon.innerText = "cloud_done";
+      icon.className = "material-symbols-outlined text-[18px] text-emerald-500";
+      text.innerText = "Synced";
+    }
+  } else {
+    indicator.classList.add('hidden');
+  }
+}
+
+async function syncFromSupabase() {
+  if (!supabaseClient || !state.auth.loggedIn) return;
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+  
+  const userId = session.user.id;
+  isSyncing = true;
+  showSyncIndicator(true);
+  
+  try {
+    // 1. Fetch Profile
+    const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', userId).maybeSingle();
+    if (profile) {
+      state.auth.user.name = profile.name || state.auth.user.name;
+      state.auth.user.profession = profile.profession || state.auth.user.profession;
+      state.auth.user.purpose = profile.purpose || state.auth.user.purpose;
+    }
+    
+    // 2. Fetch Stats
+    const { data: stats } = await supabaseClient.from('stats').select('*').eq('user_id', userId).maybeSingle();
+    if (stats) {
+      state.stats.currentStreak = stats.current_streak;
+      state.stats.longestStreak = stats.longest_streak;
+      state.stats.lastWakeupDate = stats.last_wakeup_date;
+      state.stats.totalAlarmsCompleted = stats.total_alarms_completed;
+      state.stats.totalMissionsSolved = stats.total_missions_solved;
+      state.stats.completionHistory = stats.completion_history || [];
+    }
+    
+    // 3. Fetch Settings
+    const { data: settings } = await supabaseClient.from('settings').select('*').eq('user_id', userId).maybeSingle();
+    if (settings) {
+      state.settings.difficulty = settings.difficulty;
+      state.settings.darkMode = settings.dark_mode;
+      state.settings.volume = settings.volume;
+      state.settings.snoozeDuration = settings.snooze_duration;
+    }
+    
+    // 4. Fetch Alarms
+    const { data: alarms } = await supabaseClient.from('alarms').select('*').eq('user_id', userId);
+    if (alarms && alarms.length > 0) {
+      state.alarms = alarms.map(a => ({
+        id: a.local_id,
+        time: a.time,
+        days: a.days,
+        label: a.label,
+        mission: a.mission,
+        active: a.active,
+        completedToday: a.completed_today
+      }));
+    }
+    
+    // 5. Fetch Birthdays
+    const { data: birthdays } = await supabaseClient.from('birthdays').select('*').eq('user_id', userId);
+    if (birthdays && birthdays.length > 0) {
+      state.birthdays = birthdays.map(b => ({
+        id: b.local_id,
+        name: b.name,
+        date: b.date,
+        notifyWeekBefore: b.notifyWeekBefore,
+        notifyDayOf: b.notifyDayOf
+      }));
+    }
+    
+    // 6. Fetch Tasks
+    const { data: tasks } = await supabaseClient.from('tasks').select('*').eq('user_id', userId);
+    if (tasks && tasks.length > 0) {
+      state.tasks = tasks.map(t => ({
+        id: t.local_id,
+        title: t.title,
+        date: t.date,
+        time: t.time,
+        notified: t.notified
+      }));
+    }
+    
+    saveStateLocalOnly();
+    
+    // Theme Mode
+    if (state.settings.darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    
+    // Refresh page
+    const hash = window.location.hash.substring(1) || 'dashboard';
+    navigateTo(hash);
+  } catch (err) {
+    console.error("Error syncing from Supabase:", err);
+  } finally {
+    isSyncing = false;
+    showSyncIndicator(false);
+  }
+}
+
+async function syncToSupabase() {
+  if (!supabaseClient || isSyncing || !state.auth.loggedIn) return;
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+  
+  const userId = session.user.id;
+  showSyncIndicator(true);
+  
+  try {
+    // 1. Upsert Profile
+    await supabaseClient.from('profiles').upsert({
+      id: userId,
+      name: state.auth.user.name,
+      profession: state.auth.user.profession,
+      purpose: state.auth.user.purpose,
+      updated_at: new Date().toISOString()
+    });
+    
+    // 2. Upsert Stats
+    await supabaseClient.from('stats').upsert({
+      user_id: userId,
+      current_streak: state.stats.currentStreak,
+      longest_streak: state.stats.longestStreak,
+      last_wakeup_date: state.stats.lastWakeupDate,
+      total_alarms_completed: state.stats.totalAlarmsCompleted,
+      total_missions_solved: state.stats.totalMissionsSolved,
+      completion_history: state.stats.completionHistory,
+      updated_at: new Date().toISOString()
+    });
+    
+    // 3. Upsert Settings
+    await supabaseClient.from('settings').upsert({
+      user_id: userId,
+      difficulty: state.settings.difficulty,
+      dark_mode: state.settings.darkMode,
+      volume: state.settings.volume,
+      snooze_duration: state.settings.snoozeDuration,
+      updated_at: new Date().toISOString()
+    });
+    
+    // 4. Sync Alarms
+    await supabaseClient.from('alarms').delete().eq('user_id', userId);
+    if (state.alarms.length > 0) {
+      const alarmRows = state.alarms.map(a => ({
+        id: `${userId}_${a.id}`,
+        user_id: userId,
+        local_id: a.id,
+        time: a.time,
+        days: a.days,
+        label: a.label,
+        mission: a.mission,
+        active: a.active,
+        completed_today: a.completedToday
+      }));
+      await supabaseClient.from('alarms').insert(alarmRows);
+    }
+    
+    // 5. Sync Birthdays
+    await supabaseClient.from('birthdays').delete().eq('user_id', userId);
+    if (state.birthdays.length > 0) {
+      const birthdayRows = state.birthdays.map(b => ({
+        id: `${userId}_${b.id}`,
+        user_id: userId,
+        local_id: b.id,
+        name: b.name,
+        date: b.date,
+        notify_week_before: b.notifyWeekBefore,
+        notify_day_of: b.notifyDayOf
+      }));
+      await supabaseClient.from('birthdays').insert(birthdayRows);
+    }
+    
+    // 6. Sync Tasks
+    await supabaseClient.from('tasks').delete().eq('user_id', userId);
+    if (state.tasks.length > 0) {
+      const taskRows = state.tasks.map(t => ({
+        id: `${userId}_${t.id}`,
+        user_id: userId,
+        local_id: t.id,
+        title: t.title,
+        date: t.date,
+        time: t.time,
+        notified: t.notified
+      }));
+      await supabaseClient.from('tasks').insert(taskRows);
+    }
+    
+  } catch (err) {
+    console.error("Error syncing to Supabase:", err);
+  } finally {
+    showSyncIndicator(false);
+  }
 }
 
 // ----------------------------------------------------
@@ -1388,40 +1623,130 @@ function toggleThemeMode() {
 }
 
 // ----------------------------------------------------
-// Authentication Handlers (Mock)
+// Authentication Handlers (Supabase Integration)
 // ----------------------------------------------------
-function handleLogin(event) {
+let currentAuthMode = 'signin';
+
+function setAuthMode(mode) {
+  currentAuthMode = mode;
+  const nameField = document.getElementById('auth-field-name');
+  const profField = document.getElementById('auth-field-profession');
+  const purpField = document.getElementById('auth-field-purpose');
+  const submitBtn = document.getElementById('auth-submit-btn');
+  const toggleSigninBtn = document.getElementById('auth-toggle-signin');
+  const toggleSignupBtn = document.getElementById('auth-toggle-signup');
+  
+  const activeClass = "flex-1 py-2 rounded font-bold text-xs transition-all bg-primary text-white shadow-sm";
+  const inactiveClass = "flex-1 py-2 rounded font-bold text-xs transition-all text-on-surface-variant hover:text-primary";
+  
+  if (mode === 'signup') {
+    if (nameField) nameField.classList.remove('hidden');
+    if (profField) profField.classList.remove('hidden');
+    if (purpField) purpField.classList.remove('hidden');
+    document.getElementById('login-name').required = true;
+    submitBtn.innerHTML = 'Create Account <span class="material-symbols-outlined text-[20px]">person_add</span>';
+    toggleSigninBtn.className = inactiveClass;
+    toggleSignupBtn.className = activeClass;
+  } else {
+    if (nameField) nameField.classList.add('hidden');
+    if (profField) profField.classList.add('hidden');
+    if (purpField) purpField.classList.add('hidden');
+    document.getElementById('login-name').required = false;
+    submitBtn.innerHTML = 'Sign In <span class="material-symbols-outlined text-[20px]">login</span>';
+    toggleSigninBtn.className = activeClass;
+    toggleSignupBtn.className = inactiveClass;
+  }
+}
+
+async function handleAuthSubmit(event) {
   if (event) event.preventDefault();
   
   const email = document.getElementById('login-email').value.trim();
-  const name = document.getElementById('login-name').value.trim() || "Julian Sterling";
+  const password = document.getElementById('login-password').value;
+  const name = document.getElementById('login-name').value.trim();
+  const profession = document.getElementById('login-profession').value;
+  const purpose = document.getElementById('login-purpose').value;
   
-  if (!email) {
-    alert("Please enter a valid email address.");
+  if (!supabaseClient) {
+    alert("Supabase client is not loaded yet. Check your internet connection.");
     return;
   }
   
-  state.auth.loggedIn = true;
-  state.auth.user.name = name;
-  state.auth.user.email = email;
+  const submitBtn = document.getElementById('auth-submit-btn');
+  const origBtnHtml = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="material-symbols-outlined text-[20px] animate-spin">sync</span> Loading...';
   
-  const professionEl = document.getElementById('login-profession');
-  const purposeEl = document.getElementById('login-purpose');
-  if (professionEl) state.auth.user.profession = professionEl.value;
-  if (purposeEl) state.auth.user.purpose = purposeEl.value;
-
-  saveState();
-  
-  // Initialize notifications trigger permission
-  requestNotificationPermission();
-  
-  window.location.hash = '#dashboard';
+  try {
+    if (currentAuthMode === 'signup') {
+      const { data, error } = await supabaseClient.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: name,
+            profession: profession,
+            purpose: purpose
+          }
+        }
+      });
+      if (error) throw error;
+      
+      alert("Account created successfully! Logging you in...");
+    }
+    
+    // Sign in
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email,
+      password
+    });
+    if (error) throw error;
+    
+    // Logged in
+    state.auth.loggedIn = true;
+    state.auth.user = {
+      email: data.user.email,
+      name: data.user.user_metadata.name || name || data.user.email.split('@')[0],
+      profession: data.user.user_metadata.profession || profession || "Software Engineer",
+      purpose: data.user.user_metadata.purpose || purpose || "Gym / Workout"
+    };
+    
+    saveStateLocalOnly();
+    
+    // Reset login fields
+    document.getElementById('login-email').value = "";
+    document.getElementById('login-password').value = "";
+    document.getElementById('login-name').value = "";
+    
+    requestNotificationPermission();
+    
+    // Pull any existing database data
+    await syncFromSupabase();
+    
+    // If it was a signup, push the local starting state up
+    if (currentAuthMode === 'signup') {
+      await syncToSupabase();
+    }
+    
+    window.location.hash = '#dashboard';
+  } catch (err) {
+    console.error("Auth process error:", err);
+    alert("Authentication failed: " + err.message);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = origBtnHtml;
+  }
 }
 
-function handleLogout() {
-  if (confirm("Are you sure you want to log out?")) {
+async function handleLogout() {
+  if (confirm("Are you sure you want to log out? Local data will be reset, and your cloud database backup will be safe.")) {
+    if (supabaseClient) {
+      await supabaseClient.auth.signOut();
+    }
     state.auth.loggedIn = false;
-    saveState();
+    // Reset local state to original template
+    state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+    saveStateLocalOnly();
     window.location.hash = '#auth';
   }
 }
@@ -1863,7 +2188,7 @@ function switchInstallTab(platform) {
 }
 
 // Hide install banner if already in standalone app mode
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
   // Service Worker Registration
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(err => {
@@ -1871,6 +2196,33 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
   
+  // Restore session on load and perform sync
+  if (supabaseClient) {
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session) {
+        state.auth.loggedIn = true;
+        state.auth.user = {
+          email: session.user.email,
+          name: session.user.user_metadata.name || state.auth.user.name,
+          profession: session.user.user_metadata.profession || state.auth.user.profession,
+          purpose: session.user.user_metadata.purpose || state.auth.user.purpose
+        };
+        saveStateLocalOnly();
+        // Sync from DB
+        await syncFromSupabase();
+      } else {
+        // If we thought we were logged in, but Supabase says we aren't, sign out locally
+        if (state.auth.loggedIn) {
+          state.auth.loggedIn = false;
+          saveStateLocalOnly();
+        }
+      }
+    } catch (e) {
+      console.error("Error restoring session:", e);
+    }
+  }
+
   // Setup standard routing
   const initialHash = window.location.hash.substring(1) || 'dashboard';
   navigateTo(initialHash);
@@ -1893,5 +2245,10 @@ window.addEventListener('DOMContentLoaded', () => {
       installContainer.classList.add('hidden');
       installContainer.classList.remove('flex');
     }
+  }
+  
+  // If logged in, show sync status
+  if (state.auth.loggedIn) {
+    showSyncIndicator(false);
   }
 });

@@ -13,6 +13,7 @@
   <link rel="apple-touch-icon" href="app_icon.png" />
   
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
   
@@ -105,6 +106,11 @@
           <h1 class="font-bold text-headline-md text-primary tracking-tight">Up7</h1>
         </div>
         <div class="flex items-center gap-md">
+          <!-- Cloud Sync Status Indicator -->
+          <div id="sync-status-indicator" class="hidden flex items-center gap-xs text-xs text-on-surface-variant font-medium">
+            <span id="sync-icon" class="material-symbols-outlined text-[18px]">cloud_done</span>
+            <span id="sync-text" class="hidden sm:inline">Synced</span>
+          </div>
           <a href="#settings" class="text-on-surface-variant hover:text-primary transition-all duration-150 active:scale-95">
             <span class="material-symbols-outlined text-2xl" data-icon="settings">settings</span>
           </a>
@@ -133,16 +139,26 @@
           <h2 class="font-bold text-[28px] text-on-background tracking-tight">Welcome to Up7</h2>
           <p class="font-body-md text-on-surface-variant mt-xs mb-lg">Wake Up. Level Up.</p>
           
-          <form onsubmit="handleLogin(event)" class="text-left space-y-md">
-            <div>
+          <!-- Segmented Control to toggle between Sign In and Sign Up -->
+          <div class="flex bg-surface dark:bg-slate-900 p-[2px] rounded-lg border border-outline-variant dark:border-slate-800 mb-lg">
+            <button type="button" id="auth-toggle-signin" onclick="setAuthMode('signin')" class="flex-1 py-2 rounded font-bold text-xs transition-all bg-primary text-white shadow-sm">Sign In</button>
+            <button type="button" id="auth-toggle-signup" onclick="setAuthMode('signup')" class="flex-1 py-2 rounded font-bold text-xs transition-all text-on-surface-variant hover:text-primary">Create Account</button>
+          </div>
+
+          <form onsubmit="handleAuthSubmit(event)" class="text-left space-y-md">
+            <div id="auth-field-name" class="hidden">
               <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-xs">Your Name</label>
-              <input id="login-name" type="text" placeholder="e.g. Julian Sterling" class="w-full h-12 bg-surface dark:bg-slate-900 border-transparent rounded-lg px-md font-body-md focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-surface-container-lowest transition-all" required value="Julian Sterling">
+              <input id="login-name" type="text" placeholder="e.g. Julian Sterling" class="w-full h-12 bg-surface dark:bg-slate-900 border-transparent rounded-lg px-md font-body-md focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-surface-container-lowest transition-all">
             </div>
             <div>
               <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-xs">Email Address</label>
-              <input id="login-email" type="email" placeholder="julian@up7app.io" class="w-full h-12 bg-surface dark:bg-slate-900 border-transparent rounded-lg px-md font-body-md focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-surface-container-lowest transition-all" required value="julian@up7app.io">
+              <input id="login-email" type="email" placeholder="julian@up7app.io" class="w-full h-12 bg-surface dark:bg-slate-900 border-transparent rounded-lg px-md font-body-md focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-surface-container-lowest transition-all" required>
             </div>
             <div>
+              <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-xs">Password</label>
+              <input id="login-password" type="password" placeholder="••••••••" class="w-full h-12 bg-surface dark:bg-slate-900 border-transparent rounded-lg px-md font-body-md focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-surface-container-lowest transition-all" required>
+            </div>
+            <div id="auth-field-profession" class="hidden">
               <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-xs">Profession</label>
               <select id="login-profession" class="w-full h-12 bg-surface dark:bg-slate-900 border-transparent rounded-lg px-md font-body-md focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-surface-container-lowest transition-all text-on-surface">
                 <option value="Software Engineer" selected>Software Engineer</option>
@@ -154,7 +170,7 @@
                 <option value="Other">Other</option>
               </select>
             </div>
-            <div>
+            <div id="auth-field-purpose" class="hidden">
               <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-xs">Purpose of Alarm (Wake-up Target)</label>
               <select id="login-purpose" class="w-full h-12 bg-surface dark:bg-slate-900 border-transparent rounded-lg px-md font-body-md focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-surface-container-lowest transition-all text-on-surface">
                 <option value="Gym / Workout" selected>Gym / Workout</option>
@@ -166,13 +182,13 @@
               </select>
             </div>
             
-            <button type="submit" class="w-full h-12 bg-primary text-white font-bold rounded-lg flex items-center justify-center gap-sm hover:bg-opacity-95 transition-all shadow-sm active:scale-98">
-              Sign In to Your Dashboard
+            <button type="submit" id="auth-submit-btn" class="w-full h-12 bg-primary text-white font-bold rounded-lg flex items-center justify-center gap-sm hover:bg-opacity-95 transition-all shadow-sm active:scale-98">
+              Sign In
               <span class="material-symbols-outlined text-[20px]">login</span>
             </button>
           </form>
           
-          <p class="text-[11px] text-on-surface-variant/80 mt-lg">All statistics and reminders are stored securely and offline on this browser.</p>
+          <p class="text-[11px] text-on-surface-variant/80 mt-lg">All statistics and alarms can be backed up automatically to Supabase when you sign in.</p>
         </div>
       </section>
 
