@@ -179,20 +179,9 @@ function navigateTo(pageId) {
 }
 
 function updateNavHighlights(activePage) {
-  // For desktop sidebar
-  const desktopLinks = document.querySelectorAll('aside nav a');
-  desktopLinks.forEach(link => {
-    const href = link.getAttribute('href');
-    if (href === `#${activePage}`) {
-      link.className = 'border-l-4 border-primary text-primary font-bold bg-primary-container/10 dark:bg-primary-fixed-dim/10 py-md px-lg flex items-center gap-md transition-all duration-200';
-    } else {
-      link.className = 'text-on-surface-variant dark:text-outline-variant py-md px-lg flex items-center gap-md hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors duration-200';
-    }
-  });
-
-  // For mobile bottom navigation
-  const mobileLinks = document.querySelectorAll('nav.md\\:hidden a');
-  mobileLinks.forEach(link => {
+  // Highlight active bottom navigation items
+  const navLinks = document.querySelectorAll('nav a');
+  navLinks.forEach(link => {
     const href = link.getAttribute('href');
     if (href === `#${activePage}`) {
       link.className = 'flex flex-col items-center justify-center bg-primary-container dark:bg-on-primary-fixed-variant text-on-primary-container dark:text-primary-fixed rounded-full px-4 py-1 active:scale-95 transition-all duration-150';
@@ -203,20 +192,17 @@ function updateNavHighlights(activePage) {
 
   // Show/hide shell containers for login page vs app pages
   const header = document.querySelector('header');
-  const sidebar = document.querySelector('aside');
-  const bottomNav = document.querySelector('nav.md\\:hidden');
+  const bottomNav = document.querySelector('nav');
   const main = document.querySelector('main');
   
   if (activePage === 'auth' || activePage === 'active-mission') {
     if (header) header.classList.add('hidden');
-    if (sidebar) sidebar.classList.add('hidden');
     if (bottomNav) bottomNav.classList.add('hidden');
-    if (main) main.className = 'w-full min-h-screen px-gutter py-lg flex items-center justify-center';
+    if (main) main.className = 'w-full flex-grow px-gutter py-lg flex items-center justify-center';
   } else {
     if (header) header.classList.remove('hidden');
-    if (sidebar) sidebar.classList.remove('hidden');
     if (bottomNav) bottomNav.classList.remove('hidden');
-    if (main) main.className = 'flex-grow md:ml-[240px] px-gutter md:px-xl py-lg pb-32';
+    if (main) main.className = 'flex-grow px-gutter py-lg pb-12';
   }
 }
 

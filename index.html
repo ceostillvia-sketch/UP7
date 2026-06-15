@@ -86,62 +86,32 @@
     }
   </style>
 </head>
-<body class="bg-background text-on-background min-h-screen transition-colors duration-200">
+<body class="bg-surface-container-high dark:bg-slate-950 text-on-background min-h-screen transition-colors duration-200 flex justify-center items-start">
 
-  <!-- Top Navigation Header / App Bar (Hidden in Active Mission & Auth) -->
-  <header class="bg-background dark:bg-slate-900 border-b border-outline-variant dark:border-slate-800 sticky top-0 z-40">
-    <div class="flex justify-between items-center w-full px-lg py-md max-w-container-max mx-auto">
-      <div class="flex items-center gap-sm">
-        <img src="app_icon.png" alt="Up7 Logo" class="w-8 h-8 rounded-lg object-cover">
-        <h1 class="font-bold text-headline-md text-primary tracking-tight">Up7</h1>
-      </div>
-      <div class="flex items-center gap-md">
-        <a href="#settings" class="text-on-surface-variant hover:text-primary transition-all duration-150 active:scale-95">
-          <span class="material-symbols-outlined text-2xl" data-icon="settings">settings</span>
-        </a>
-        <div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center border border-primary/20 overflow-hidden">
-          <span class="material-symbols-outlined text-primary font-bold">person</span>
+  <div class="w-full max-w-[480px] min-h-screen bg-background dark:bg-slate-900 shadow-2xl relative border-x border-outline-variant/40 dark:border-slate-800 flex flex-col mx-auto">
+
+    <!-- Top Navigation Header / App Bar (Hidden in Active Mission & Auth) -->
+    <header class="bg-background dark:bg-slate-900 border-b border-outline-variant dark:border-slate-800 sticky top-0 z-40">
+      <div class="flex justify-between items-center w-full px-lg py-md">
+        <div class="flex items-center gap-sm">
+          <img src="app_icon.png" alt="Up7 Logo" class="w-8 h-8 rounded-lg object-cover">
+          <h1 class="font-bold text-headline-md text-primary tracking-tight">Up7</h1>
+        </div>
+        <div class="flex items-center gap-md">
+          <a href="#settings" class="text-on-surface-variant hover:text-primary transition-all duration-150 active:scale-95">
+            <span class="material-symbols-outlined text-2xl" data-icon="settings">settings</span>
+          </a>
+          <div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center border border-primary/20 overflow-hidden">
+            <span class="material-symbols-outlined text-primary font-bold">person</span>
+          </div>
         </div>
       </div>
-    </div>
-  </header>
+    </header>
 
-  <div class="flex max-w-container-max mx-auto min-h-[calc(100vh-65px)]">
-    
-    <!-- Sidebar Navigation (Desktop Only) -->
-    <aside class="hidden md:flex flex-col border-r border-outline-variant dark:border-slate-800 w-[240px] bg-surface-container-lowest dark:bg-slate-900 pt-lg shrink-0">
-      <nav class="flex-1 px-sm space-y-sm">
-        <a href="#dashboard" class="border-l-4 border-primary text-primary font-bold bg-primary-container/10 py-md px-lg flex items-center gap-md transition-all duration-200">
-          <span class="material-symbols-outlined" data-icon="home">home</span>
-          <span class="font-label-md text-label-md">Dashboard</span>
-        </a>
-        <a href="#alarms" class="text-on-surface-variant py-md px-lg flex items-center gap-md hover:bg-surface-container-high transition-colors duration-200">
-          <span class="material-symbols-outlined" data-icon="alarm">alarm</span>
-          <span class="font-label-md text-label-md">Alarms</span>
-        </a>
-        <a href="#birthdays" class="text-on-surface-variant py-md px-lg flex items-center gap-md hover:bg-surface-container-high transition-colors duration-200">
-          <span class="material-symbols-outlined" data-icon="cake">notifications</span>
-          <span class="font-label-md text-label-md">Reminders</span>
-        </a>
-        <a href="#stats" class="text-on-surface-variant py-md px-lg flex items-center gap-md hover:bg-surface-container-high transition-colors duration-200">
-          <span class="material-symbols-outlined" data-icon="equalizer">equalizer</span>
-          <span class="font-label-md text-label-md">Statistics</span>
-        </a>
-        <a href="#settings" class="text-on-surface-variant py-md px-lg flex items-center gap-md hover:bg-surface-container-high transition-colors duration-200">
-          <span class="material-symbols-outlined" data-icon="settings">settings</span>
-          <span class="font-label-md text-label-md">Settings</span>
-        </a>
-      </nav>
-      <div class="p-lg">
-        <button onclick="openAlarmModal()" class="w-full py-md bg-primary text-white rounded-xl font-bold flex items-center justify-center gap-sm active:scale-[0.98] transition-all hover:bg-opacity-90 shadow-sm">
-          <span class="material-symbols-outlined" data-icon="add">add</span>
-          Add Alarm
-        </button>
-      </div>
-    </aside>
-
-    <!-- Main Content Panel -->
-    <main class="flex-grow px-gutter md:px-xl py-lg pb-32">
+    <div class="flex flex-col flex-grow">
+      
+      <!-- Main Content Panel -->
+      <main class="flex-grow px-gutter py-lg">
 
       <!-- ================================================================= -->
       <!-- VIEW: AUTHENTICATION -->
@@ -679,27 +649,28 @@
       </section>
 
     </main>
-  </div>
+    
+    <!-- Mobile Bottom Navigation Bar (Hidden in Active Mission & Auth) -->
+    <nav class="sticky bottom-0 left-0 w-full flex justify-around items-center px-gutter py-sm pb-safe bg-surface dark:bg-slate-900 border-t border-outline-variant dark:border-slate-800 shadow-[0px_-4px_20px_rgba(44,62,80,0.05)] z-40 rounded-t-xl shrink-0">
+      <a href="#dashboard" class="flex flex-col items-center justify-center bg-primary-container dark:bg-slate-800 text-on-primary-container dark:text-primary-fixed rounded-full px-4 py-1 active:scale-95 transition-all duration-150">
+        <span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+        <span class="font-label-sm text-[11px] mt-0.5">Home</span>
+      </a>
+      <a href="#alarms" class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:text-primary active:scale-95 transition-all duration-150">
+        <span class="material-symbols-outlined" data-icon="alarm">alarm</span>
+        <span class="font-label-sm text-[11px] mt-0.5">Alarms</span>
+      </a>
+      <a href="#birthdays" class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:text-primary active:scale-95 transition-all duration-150">
+        <span class="material-symbols-outlined" data-icon="cake">notifications</span>
+        <span class="font-label-sm text-[11px] mt-0.5">Reminders</span>
+      </a>
+      <a href="#stats" class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:text-primary active:scale-95 transition-all duration-150">
+        <span class="material-symbols-outlined" data-icon="equalizer">equalizer</span>
+        <span class="font-label-sm text-[11px] mt-0.5">Stats</span>
+      </a>
+    </nav>
 
-  <!-- Mobile Bottom Navigation Bar (Hidden in Active Mission & Auth) -->
-  <nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-gutter py-sm pb-safe bg-surface dark:bg-slate-900 border-t border-outline-variant dark:border-slate-800 shadow-[0px_-4px_20px_rgba(44,62,80,0.05)] z-40 rounded-t-xl">
-    <a href="#dashboard" class="flex flex-col items-center justify-center bg-primary-container dark:bg-slate-800 text-on-primary-container dark:text-primary-fixed rounded-full px-4 py-1 active:scale-95 transition-all duration-150">
-      <span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
-      <span class="font-label-sm text-[11px] mt-0.5">Home</span>
-    </a>
-    <a href="#alarms" class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:text-primary active:scale-95 transition-all duration-150">
-      <span class="material-symbols-outlined" data-icon="alarm">alarm</span>
-      <span class="font-label-sm text-[11px] mt-0.5">Alarms</span>
-    </a>
-    <a href="#birthdays" class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:text-primary active:scale-95 transition-all duration-150">
-      <span class="material-symbols-outlined" data-icon="cake">notifications</span>
-      <span class="font-label-sm text-[11px] mt-0.5">Reminders</span>
-    </a>
-    <a href="#stats" class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:text-primary active:scale-95 transition-all duration-150">
-      <span class="material-symbols-outlined" data-icon="equalizer">equalizer</span>
-      <span class="font-label-sm text-[11px] mt-0.5">Stats</span>
-    </a>
-  </nav>
+  </div></div>
 
   <!-- ================================================================= -->
   <!-- MODAL: ADD/EDIT ALARM -->
