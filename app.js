@@ -1841,6 +1841,27 @@ function handleInstallPWAClick() {
   }
 }
 
+function switchInstallTab(platform) {
+  const btnAndroid = document.getElementById('btn-install-tab-android');
+  const btnIos = document.getElementById('btn-install-tab-ios');
+  const contentAndroid = document.getElementById('install-content-android');
+  const contentIos = document.getElementById('install-content-ios');
+  
+  if (!btnAndroid || !btnIos || !contentAndroid || !contentIos) return;
+  
+  if (platform === 'android') {
+    btnAndroid.className = "flex-1 py-1.5 rounded font-bold text-xs transition-all bg-primary text-white shadow-sm";
+    btnIos.className = "flex-1 py-1.5 rounded font-bold text-xs transition-all text-on-surface-variant hover:text-primary";
+    contentAndroid.classList.remove('hidden');
+    contentIos.classList.add('hidden');
+  } else {
+    btnAndroid.className = "flex-1 py-1.5 rounded font-bold text-xs transition-all text-on-surface-variant hover:text-primary";
+    btnIos.className = "flex-1 py-1.5 rounded font-bold text-xs transition-all bg-primary text-white shadow-sm";
+    contentAndroid.classList.add('hidden');
+    contentIos.classList.remove('hidden');
+  }
+}
+
 // Hide install banner if already in standalone app mode
 window.addEventListener('DOMContentLoaded', () => {
   // Service Worker Registration

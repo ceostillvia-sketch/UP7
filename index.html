@@ -558,15 +558,38 @@
             <input id="settings-volume" oninput="handleVolumeChange(this.value)" type="range" min="0" max="100" value="80" class="w-full h-2 bg-surface-container-high dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-primary" />
           </div>
 
-          <!-- Install PWA -->
-          <div id="pwa-install-container" class="flex p-lg border border-dashed border-primary/40 rounded-xl bg-primary-container/10 flex-col md:flex-row items-center justify-between gap-md">
+          <!-- Install PWA & iOS Guide -->
+          <div id="pwa-install-container" class="flex p-lg border border-dashed border-primary/40 rounded-xl bg-primary-container/10 flex-col gap-md">
             <div>
               <h4 class="font-bold text-body-lg text-primary">Install Up7 App</h4>
-              <p class="text-xs text-on-surface-variant mt-1">Install to your phone or desktop screen for offline alarms and push reminders.</p>
+              <p class="text-xs text-on-surface-variant mt-1">Install to your home screen for offline alarms and push reminders.</p>
             </div>
-            <button onclick="handleInstallPWAClick()" class="bg-primary text-white py-md px-lg font-bold rounded-xl active:scale-95 transition-all text-sm hover:bg-opacity-95 shadow-sm">
-              Install PWA
-            </button>
+            
+            <!-- Install tabs selection: Android/PC vs iOS -->
+            <div class="flex bg-surface dark:bg-slate-900 p-[2px] rounded-lg border border-outline-variant dark:border-slate-800 select-none">
+              <button type="button" id="btn-install-tab-android" onclick="switchInstallTab('android')" class="flex-1 py-1.5 rounded font-bold text-xs transition-all bg-primary text-white shadow-sm">Android / PC</button>
+              <button type="button" id="btn-install-tab-ios" onclick="switchInstallTab('ios')" class="flex-1 py-1.5 rounded font-bold text-xs transition-all text-on-surface-variant hover:text-primary">iOS / iPhone</button>
+            </div>
+
+            <!-- Install Content Android/PC -->
+            <div id="install-content-android" class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-md">
+              <p class="text-xs text-on-surface-variant leading-relaxed">Direct install supported for Chrome, Edge, and Opera on Android/Windows.</p>
+              <button onclick="handleInstallPWAClick()" class="bg-primary text-white py-2 px-lg font-bold rounded-lg text-xs hover:bg-opacity-95 shadow-sm whitespace-nowrap active:scale-95 transition-all">
+                Install App
+              </button>
+            </div>
+
+            <!-- Install Content iOS -->
+            <div id="install-content-ios" class="hidden flex flex-col gap-sm">
+              <p class="text-xs text-on-surface-variant leading-relaxed">
+                Safari on iOS does not support one-click install. To add to your home screen:
+              </p>
+              <ol class="text-xs text-on-surface font-semibold list-decimal list-inside space-y-2 bg-surface/50 dark:bg-slate-900/50 p-sm rounded-lg border border-outline-variant/30">
+                <li>Tap the <span class="material-symbols-outlined !text-xs text-primary">ios_share</span> <span class="text-primary font-bold">Share</span> button at the bottom of Safari.</li>
+                <li>Scroll down and tap <span class="text-primary font-bold">"Add to Home Screen"</span>.</li>
+                <li>Tap <span class="text-primary font-bold">"Add"</span> in the top-right corner.</li>
+              </ol>
+            </div>
           </div>
 
           <p class="text-center text-xs text-on-surface-variant mt-xl">Up7 v1.0.0 (Offline-First Stable)</p>
@@ -667,6 +690,10 @@
       <a href="#stats" class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:text-primary active:scale-95 transition-all duration-150">
         <span class="material-symbols-outlined" data-icon="equalizer">equalizer</span>
         <span class="font-label-sm text-[11px] mt-0.5">Stats</span>
+      </a>
+      <a href="#settings" class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:text-primary active:scale-95 transition-all duration-150">
+        <span class="material-symbols-outlined" data-icon="settings">settings</span>
+        <span class="font-label-sm text-[11px] mt-0.5">Settings</span>
       </a>
     </nav>
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'up7-cache-v6';
+const CACHE_NAME = 'up7-cache-v7';
 const ASSETS = [
   './',
   './index.html',
