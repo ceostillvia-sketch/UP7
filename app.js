@@ -105,24 +105,25 @@ function showSyncIndicator(syncing) {
 
 async function syncFromSupabase() {
   if (!supabaseClient || !state.auth.loggedIn) return;
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  if (!session) return;
   
-  const userId = session.user.id;
+  const phone = state.auth.user.phone || localStorage.getItem('up7_logged_in_phone');
+  if (!phone) return;
+  
   isSyncing = true;
   showSyncIndicator(true);
   
   try {
     // 1. Fetch Profile
-    const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', userId).maybeSingle();
+    const { data: profile } = await supabaseClient.from('up7_users').select('*').eq('phone', phone).maybeSingle();
     if (profile) {
       state.auth.user.name = profile.name || state.auth.user.name;
+      state.auth.user.email = profile.email || state.auth.user.email || "";
       state.auth.user.profession = profile.profession || state.auth.user.profession;
       state.auth.user.purpose = profile.purpose || state.auth.user.purpose;
     }
     
     // 2. Fetch Stats
-    const { data: stats } = await supabaseClient.from('stats').select('*').eq('user_id', userId).maybeSingle();
+    const { data: stats } = await supabaseClient.from('stats').select('*').eq('user_phone', phone).maybeSingle();
     if (stats) {
       state.stats.currentStreak = stats.current_streak;
       state.stats.longestStreak = stats.longest_streak;
@@ -133,7 +134,7 @@ async function syncFromSupabase() {
     }
     
     // 3. Fetch Settings
-    const { data: settings } = await supabaseClient.from('settings').select('*').eq('user_id', userId).maybeSingle();
+    const { data: settings } = await supabaseClient.from('settings').select('*').eq('user_phone', phone).maybeSingle();
     if (settings) {
       state.settings.difficulty = settings.difficulty;
       state.settings.darkMode = settings.dark_mode;
@@ -142,7 +143,7 @@ async function syncFromSupabase() {
     }
     
     // 4. Fetch Alarms
-    const { data: alarms } = await supabaseClient.from('alarms').select('*').eq('user_id', userId);
+    const { data: alarms } = await supabaseClient.from('alarms').select('*').eq('user_phone', phone);
     if (alarms && alarms.length > 0) {
       state.alarms = alarms.map(a => ({
         id: a.local_id,
@@ -156,19 +157,19 @@ async function syncFromSupabase() {
     }
     
     // 5. Fetch Birthdays
-    const { data: birthdays } = await supabaseClient.from('birthdays').select('*').eq('user_id', userId);
+    const { data: birthdays } = await supabaseClient.from('birthdays').select('*').eq('user_phone', phone);
     if (birthdays && birthdays.length > 0) {
       state.birthdays = birthdays.map(b => ({
         id: b.local_id,
         name: b.name,
         date: b.date,
-        notifyWeekBefore: b.notifyWeekBefore,
-        notifyDayOf: b.notifyDayOf
+        notifyWeekBefore: b.notify_week_before,
+        notifyDayOf: b.notify_day_of
       }));
     }
     
     // 6. Fetch Tasks
-    const { data: tasks } = await supabaseClient.from('tasks').select('*').eq('user_id', userId);
+    const { data: tasks } = await supabaseClient.from('tasks').select('*').eq('user_phone', phone);
     if (tasks && tasks.length > 0) {
       state.tasks = tasks.map(t => ({
         id: t.local_id,
@@ -201,25 +202,25 @@ async function syncFromSupabase() {
 
 async function syncToSupabase() {
   if (!supabaseClient || isSyncing || !state.auth.loggedIn) return;
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  if (!session) return;
   
-  const userId = session.user.id;
+  const phone = state.auth.user.phone || localStorage.getItem('up7_logged_in_phone');
+  if (!phone) return;
+  
   showSyncIndicator(true);
   
   try {
-    // 1. Upsert Profile
-    await supabaseClient.from('profiles').upsert({
-      id: userId,
+    // 1. Upsert User details
+    await supabaseClient.from('up7_users').upsert({
+      phone: phone,
       name: state.auth.user.name,
+      email: state.auth.user.email || null,
       profession: state.auth.user.profession,
-      purpose: state.auth.user.purpose,
-      updated_at: new Date().toISOString()
+      purpose: state.auth.user.purpose
     });
     
     // 2. Upsert Stats
     await supabaseClient.from('stats').upsert({
-      user_id: userId,
+      user_phone: phone,
       current_streak: state.stats.currentStreak,
       longest_streak: state.stats.longestStreak,
       last_wakeup_date: state.stats.lastWakeupDate,
@@ -231,7 +232,7 @@ async function syncToSupabase() {
     
     // 3. Upsert Settings
     await supabaseClient.from('settings').upsert({
-      user_id: userId,
+      user_phone: phone,
       difficulty: state.settings.difficulty,
       dark_mode: state.settings.darkMode,
       volume: state.settings.volume,
@@ -240,11 +241,11 @@ async function syncToSupabase() {
     });
     
     // 4. Sync Alarms
-    await supabaseClient.from('alarms').delete().eq('user_id', userId);
+    await supabaseClient.from('alarms').delete().eq('user_phone', phone);
     if (state.alarms.length > 0) {
       const alarmRows = state.alarms.map(a => ({
-        id: `${userId}_${a.id}`,
-        user_id: userId,
+        id: `${phone}_${a.id}`,
+        user_phone: phone,
         local_id: a.id,
         time: a.time,
         days: a.days,
@@ -257,11 +258,11 @@ async function syncToSupabase() {
     }
     
     // 5. Sync Birthdays
-    await supabaseClient.from('birthdays').delete().eq('user_id', userId);
+    await supabaseClient.from('birthdays').delete().eq('user_phone', phone);
     if (state.birthdays.length > 0) {
       const birthdayRows = state.birthdays.map(b => ({
-        id: `${userId}_${b.id}`,
-        user_id: userId,
+        id: `${phone}_${b.id}`,
+        user_phone: phone,
         local_id: b.id,
         name: b.name,
         date: b.date,
@@ -272,11 +273,11 @@ async function syncToSupabase() {
     }
     
     // 6. Sync Tasks
-    await supabaseClient.from('tasks').delete().eq('user_id', userId);
+    await supabaseClient.from('tasks').delete().eq('user_phone', phone);
     if (state.tasks.length > 0) {
       const taskRows = state.tasks.map(t => ({
-        id: `${userId}_${t.id}`,
-        user_id: userId,
+        id: `${phone}_${t.id}`,
+        user_phone: phone,
         local_id: t.id,
         title: t.title,
         date: t.date,
@@ -1630,6 +1631,7 @@ let currentAuthMode = 'signin';
 function setAuthMode(mode) {
   currentAuthMode = mode;
   const nameField = document.getElementById('auth-field-name');
+  const emailField = document.getElementById('auth-field-email');
   const profField = document.getElementById('auth-field-profession');
   const purpField = document.getElementById('auth-field-purpose');
   const submitBtn = document.getElementById('auth-submit-btn');
@@ -1641,6 +1643,7 @@ function setAuthMode(mode) {
   
   if (mode === 'signup') {
     if (nameField) nameField.classList.remove('hidden');
+    if (emailField) emailField.classList.remove('hidden');
     if (profField) profField.classList.remove('hidden');
     if (purpField) purpField.classList.remove('hidden');
     document.getElementById('login-name').required = true;
@@ -1649,6 +1652,7 @@ function setAuthMode(mode) {
     toggleSignupBtn.className = activeClass;
   } else {
     if (nameField) nameField.classList.add('hidden');
+    if (emailField) emailField.classList.add('hidden');
     if (profField) profField.classList.add('hidden');
     if (purpField) purpField.classList.add('hidden');
     document.getElementById('login-name').required = false;
@@ -1661,9 +1665,10 @@ function setAuthMode(mode) {
 async function handleAuthSubmit(event) {
   if (event) event.preventDefault();
   
-  const email = document.getElementById('login-email').value.trim();
+  const phone = document.getElementById('login-phone').value.trim();
   const password = document.getElementById('login-password').value;
   const name = document.getElementById('login-name').value.trim();
+  const email = document.getElementById('login-email').value.trim();
   const profession = document.getElementById('login-profession').value;
   const purpose = document.getElementById('login-purpose').value;
   
@@ -1679,63 +1684,65 @@ async function handleAuthSubmit(event) {
   
   try {
     if (currentAuthMode === 'signup') {
-      const { data, error } = await supabaseClient.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name: name,
-            profession: profession,
-            purpose: purpose
-          }
-        }
+      // 1. Check if user already exists
+      const { data: existingUser } = await supabaseClient.from('up7_users').select('phone').eq('phone', phone).maybeSingle();
+      if (existingUser) {
+        throw new Error("An account with this phone number already exists.");
+      }
+      
+      // 2. Insert new user
+      const { error: signUpError } = await supabaseClient.from('up7_users').insert({
+        phone,
+        password, // stored as text for simple custom auth demo
+        name,
+        email: email || null,
+        profession,
+        purpose
       });
-      if (error) throw error;
+      if (signUpError) throw signUpError;
+      
+      // Initialize default stats/settings rows on database
+      await supabaseClient.from('stats').insert({ user_phone: phone });
+      await supabaseClient.from('settings').insert({ user_phone: phone });
       
       alert("Account created successfully! Logging you in...");
     }
     
-    // Sign in
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
-      email,
-      password
-    });
-    if (error) throw error;
+    // Sign in / Validate custom credentials
+    const { data: user, error: loginError } = await supabaseClient.from('up7_users').select('*').eq('phone', phone).eq('password', password).maybeSingle();
+    
+    if (!user) {
+      throw new Error("Invalid phone number or password.");
+    }
     
     // Logged in
     state.auth.loggedIn = true;
     state.auth.user = {
-      email: data.user.email,
-      name: data.user.user_metadata.name || name || data.user.email.split('@')[0],
-      profession: data.user.user_metadata.profession || profession || "Software Engineer",
-      purpose: data.user.user_metadata.purpose || purpose || "Gym / Workout"
+      phone: user.phone,
+      name: user.name,
+      email: user.email || "",
+      profession: user.profession,
+      purpose: user.purpose
     };
     
+    localStorage.setItem('up7_logged_in_phone', user.phone);
     saveStateLocalOnly();
     
-    // Reset login fields
-    document.getElementById('login-email').value = "";
+    // Reset fields
+    document.getElementById('login-phone').value = "";
     document.getElementById('login-password').value = "";
     document.getElementById('login-name').value = "";
+    document.getElementById('login-email').value = "";
     
     requestNotificationPermission();
     
-    // Pull any existing database data
+    // Pull and sync DB data
     await syncFromSupabase();
-    
-    // If it was a signup, push the local starting state up
-    if (currentAuthMode === 'signup') {
-      await syncToSupabase();
-    }
     
     window.location.hash = '#dashboard';
   } catch (err) {
     console.error("Auth process error:", err);
-    if (err.message && err.message.toLowerCase().includes("confirm")) {
-      alert("Authentication Failed: Email confirmation is required by default on new Supabase projects.\n\nTo fix this:\n1. Check your email inbox (and spam folder) for the verification link.\n2. OR go to your Supabase Dashboard -> Authentication -> Providers -> Email, and turn OFF 'Confirm email' so you can sign up and login instantly.");
-    } else {
-      alert("Authentication failed: " + err.message);
-    }
+    alert("Authentication failed: " + err.message);
   } finally {
     submitBtn.disabled = false;
     submitBtn.innerHTML = origBtnHtml;
@@ -1744,10 +1751,8 @@ async function handleAuthSubmit(event) {
 
 async function handleLogout() {
   if (confirm("Are you sure you want to log out? Local data will be reset, and your cloud database backup will be safe.")) {
-    if (supabaseClient) {
-      await supabaseClient.auth.signOut();
-    }
     state.auth.loggedIn = false;
+    localStorage.removeItem('up7_logged_in_phone');
     // Reset local state to original template
     state = JSON.parse(JSON.stringify(DEFAULT_STATE));
     saveStateLocalOnly();
@@ -2201,30 +2206,22 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
   
   // Restore session on load and perform sync
-  if (supabaseClient) {
+  const loggedInPhone = localStorage.getItem('up7_logged_in_phone');
+  if (loggedInPhone) {
+    state.auth.loggedIn = true;
+    if (!state.auth.user) {
+      state.auth.user = {};
+    }
+    state.auth.user.phone = loggedInPhone;
+    saveStateLocalOnly();
     try {
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if (session) {
-        state.auth.loggedIn = true;
-        state.auth.user = {
-          email: session.user.email,
-          name: session.user.user_metadata.name || state.auth.user.name,
-          profession: session.user.user_metadata.profession || state.auth.user.profession,
-          purpose: session.user.user_metadata.purpose || state.auth.user.purpose
-        };
-        saveStateLocalOnly();
-        // Sync from DB
-        await syncFromSupabase();
-      } else {
-        // If we thought we were logged in, but Supabase says we aren't, sign out locally
-        if (state.auth.loggedIn) {
-          state.auth.loggedIn = false;
-          saveStateLocalOnly();
-        }
-      }
+      await syncFromSupabase();
     } catch (e) {
       console.error("Error restoring session:", e);
     }
+  } else {
+    state.auth.loggedIn = false;
+    saveStateLocalOnly();
   }
 
   // Setup standard routing
