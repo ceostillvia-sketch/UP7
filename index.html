@@ -70,12 +70,23 @@
   <style>
     body {
       font-family: 'Inter', sans-serif;
-      background-color: #FAFAF7;
+      background-color: #F8F9FA;
       color: #2C3E50;
+      -webkit-tap-highlight-color: transparent;
     }
     .dark body {
-      background-color: #1A252F;
-      color: #ECF0F1;
+      background-color: #0F172A;
+      color: #F8FAFC;
+    }
+    /* App base background layout adjustments */
+    .app-container {
+      background: radial-gradient(circle at top right, rgba(93, 173, 226, 0.1), transparent 45%),
+                  radial-gradient(circle at bottom left, rgba(243, 156, 18, 0.04), transparent 45%);
+      transition: background 0.3s ease;
+    }
+    .dark .app-container {
+      background: radial-gradient(circle at top right, rgba(93, 173, 226, 0.06), transparent 45%),
+                  radial-gradient(circle at bottom left, rgba(243, 156, 18, 0.02), transparent 45%);
     }
     .material-symbols-outlined {
       font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -84,19 +95,89 @@
     }
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* Heatmap styling */
     .heatmap-cell {
       aspect-ratio: 1/1;
-      border-radius: 4px;
+      border-radius: 6px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
+    .heatmap-cell:hover {
+      transform: scale(1.2);
+      z-index: 10;
+      box-shadow: 0 4px 12px rgba(93, 173, 226, 0.2);
+    }
+    
+    /* Modal styles */
     .modal-overlay {
-      background-color: rgba(44, 62, 80, 0.4);
-      backdrop-filter: blur(4px);
+      background-color: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(8px);
+      transition: all 0.3s ease;
+    }
+    
+    /* Smooth view transitions */
+    section {
+      animation: viewSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes viewSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* Micro-interactions */
+    .active-scale:active {
+      transform: scale(0.96);
+    }
+    
+    /* Range input slider styling */
+    input[type="range"]::-webkit-slider-thumb {
+      box-shadow: 0 2px 8px rgba(93, 173, 226, 0.25);
+      border: 3px solid #ffffff;
+      height: 20px;
+      width: 20px;
+      border-radius: 50%;
+      background: #5DADE2;
+      cursor: pointer;
+      -webkit-appearance: none;
+      margin-top: -6px;
+      transition: transform 0.15s ease, background-color 0.15s ease;
+    }
+    .dark input[type="range"]::-webkit-slider-thumb {
+      border-color: #1e293b;
+    }
+    input[type="range"]::-webkit-slider-thumb:active {
+      transform: scale(1.25);
+      background: #3498db;
+    }
+    input[type="range"]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 8px;
+      cursor: pointer;
+      background: #e2e8f0;
+      border-radius: 9999px;
+    }
+    .dark input[type="range"]::-webkit-slider-runnable-track {
+      background: #334155;
+    }
+    
+    /* Custom Toggle Switch */
+    .toggle-line {
+      transition: background-color 0.2s ease;
+    }
+    .toggle-dot {
+      transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
     }
   </style>
 </head>
 <body class="bg-surface-container-high dark:bg-slate-950 text-on-background min-h-screen transition-colors duration-200 flex justify-center items-start">
 
-  <div class="w-full max-w-[480px] min-h-screen bg-background dark:bg-slate-900 shadow-2xl relative border-x border-outline-variant/40 dark:border-slate-800 flex flex-col mx-auto">
+  <div class="w-full max-w-[480px] min-h-screen bg-background dark:bg-slate-900 shadow-2xl relative border-x border-outline-variant/40 dark:border-slate-800 flex flex-col mx-auto app-container">
 
     <!-- Top Navigation Header / App Bar (Hidden in Active Mission & Auth) -->
     <header class="bg-background dark:bg-slate-900 border-b border-outline-variant dark:border-slate-800 sticky top-0 z-40">
@@ -795,34 +876,34 @@
 
         <div>
           <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-sm">Repeat Days</label>
-          <div class="grid grid-cols-7 gap-sm">
-            <label class="flex flex-col items-center gap-xs cursor-pointer text-[10px] font-bold text-on-surface-variant">
-              <input type="checkbox" class="day-checkbox rounded border-outline-variant text-primary focus:ring-primary w-5 h-5" value="1" />
-              <span>Mon</span>
+          <div class="flex justify-between items-center gap-xs mt-1">
+            <label class="flex flex-col items-center cursor-pointer select-none">
+              <input type="checkbox" class="sr-only peer day-checkbox" value="1" />
+              <span class="w-10 h-10 rounded-full border border-outline-variant dark:border-slate-700 flex items-center justify-center font-bold text-xs text-on-surface-variant peer-checked:bg-primary peer-checked:text-white peer-checked:border-primary transition-all duration-150 active:scale-90 shadow-sm">M</span>
             </label>
-            <label class="flex flex-col items-center gap-xs cursor-pointer text-[10px] font-bold text-on-surface-variant">
-              <input type="checkbox" class="day-checkbox rounded border-outline-variant text-primary focus:ring-primary w-5 h-5" value="2" />
-              <span>Tue</span>
+            <label class="flex flex-col items-center cursor-pointer select-none">
+              <input type="checkbox" class="sr-only peer day-checkbox" value="2" />
+              <span class="w-10 h-10 rounded-full border border-outline-variant dark:border-slate-700 flex items-center justify-center font-bold text-xs text-on-surface-variant peer-checked:bg-primary peer-checked:text-white peer-checked:border-primary transition-all duration-150 active:scale-90 shadow-sm">T</span>
             </label>
-            <label class="flex flex-col items-center gap-xs cursor-pointer text-[10px] font-bold text-on-surface-variant">
-              <input type="checkbox" class="day-checkbox rounded border-outline-variant text-primary focus:ring-primary w-5 h-5" value="3" />
-              <span>Wed</span>
+            <label class="flex flex-col items-center cursor-pointer select-none">
+              <input type="checkbox" class="sr-only peer day-checkbox" value="3" />
+              <span class="w-10 h-10 rounded-full border border-outline-variant dark:border-slate-700 flex items-center justify-center font-bold text-xs text-on-surface-variant peer-checked:bg-primary peer-checked:text-white peer-checked:border-primary transition-all duration-150 active:scale-90 shadow-sm">W</span>
             </label>
-            <label class="flex flex-col items-center gap-xs cursor-pointer text-[10px] font-bold text-on-surface-variant">
-              <input type="checkbox" class="day-checkbox rounded border-outline-variant text-primary focus:ring-primary w-5 h-5" value="4" />
-              <span>Thu</span>
+            <label class="flex flex-col items-center cursor-pointer select-none">
+              <input type="checkbox" class="sr-only peer day-checkbox" value="4" />
+              <span class="w-10 h-10 rounded-full border border-outline-variant dark:border-slate-700 flex items-center justify-center font-bold text-xs text-on-surface-variant peer-checked:bg-primary peer-checked:text-white peer-checked:border-primary transition-all duration-150 active:scale-90 shadow-sm">T</span>
             </label>
-            <label class="flex flex-col items-center gap-xs cursor-pointer text-[10px] font-bold text-on-surface-variant">
-              <input type="checkbox" class="day-checkbox rounded border-outline-variant text-primary focus:ring-primary w-5 h-5" value="5" />
-              <span>Fri</span>
+            <label class="flex flex-col items-center cursor-pointer select-none">
+              <input type="checkbox" class="sr-only peer day-checkbox" value="5" />
+              <span class="w-10 h-10 rounded-full border border-outline-variant dark:border-slate-700 flex items-center justify-center font-bold text-xs text-on-surface-variant peer-checked:bg-primary peer-checked:text-white peer-checked:border-primary transition-all duration-150 active:scale-90 shadow-sm">F</span>
             </label>
-            <label class="flex flex-col items-center gap-xs cursor-pointer text-[10px] font-bold text-on-surface-variant">
-              <input type="checkbox" class="day-checkbox rounded border-outline-variant text-primary focus:ring-primary w-5 h-5" value="6" />
-              <span>Sat</span>
+            <label class="flex flex-col items-center cursor-pointer select-none">
+              <input type="checkbox" class="sr-only peer day-checkbox" value="6" />
+              <span class="w-10 h-10 rounded-full border border-outline-variant dark:border-slate-700 flex items-center justify-center font-bold text-xs text-on-surface-variant peer-checked:bg-primary peer-checked:text-white peer-checked:border-primary transition-all duration-150 active:scale-90 shadow-sm">S</span>
             </label>
-            <label class="flex flex-col items-center gap-xs cursor-pointer text-[10px] font-bold text-on-surface-variant">
-              <input type="checkbox" class="day-checkbox rounded border-outline-variant text-primary focus:ring-primary w-5 h-5" value="0" />
-              <span>Sun</span>
+            <label class="flex flex-col items-center cursor-pointer select-none">
+              <input type="checkbox" class="sr-only peer day-checkbox" value="0" />
+              <span class="w-10 h-10 rounded-full border border-outline-variant dark:border-slate-700 flex items-center justify-center font-bold text-xs text-on-surface-variant peer-checked:bg-primary peer-checked:text-white peer-checked:border-primary transition-all duration-150 active:scale-90 shadow-sm">S</span>
             </label>
           </div>
         </div>

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'up7-cache-v8';
+const CACHE_NAME = 'up7-cache-v9';
 const ASSETS = [
   './',
   './index.html',
@@ -6,6 +6,7 @@ const ASSETS = [
   './manifest.json',
   './app_icon.png',
   'https://cdn.tailwindcss.com?plugins=forms,container-queries',
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap',
   'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap'
 ];
