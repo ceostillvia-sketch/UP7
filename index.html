@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Up7 — Wake Up. Level Up.</title>
+  <link rel="manifest" href="manifest.json" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            // Curated calm color palette
+            primary: "#5DADE2",         // Sky Blue
+            "primary-container": "#D6ECFF", // Light Sky Blue
+            background: "#FAFAF7",      // Off White
+            surface: "#F2F4F5",         // Soft Off White
+            "on-background": "#2C3E50", // Text Color
+            "on-surface": "#2C3E50",
+            "outline-variant": "#E2E8F0",
+            error: "#E74C3C",
+            "error-container": "#FDEDEC",
+            "on-error-container": "#922B21",
+            secondary: "#34495E",
+            "secondary-container": "#EAECEE",
+            tertiary: "#F39C12",
+            "tertiary-container": "#FDEBD0",
+            "on-tertiary-container": "#7E5109",
+            "surface-container-low": "#FAFAF9",
+            "surface-container-high": "#EBEDEF",
+            "surface-container-highest": "#E5E7E9",
+            "surface-container-lowest": "#FFFFFF"
+          },
+          borderRadius: {
+            DEFAULT: "0.5rem",      // 8px
+            lg: "0.75rem",          // 12px
+            xl: "1.5rem",           // 24px (Large containers, cards)
+            full: "9999px"
+          },
+          spacing: {
+            unit: "4px",
+            xs: "4px",
+            sm: "8px",
+            md: "16px",
+            lg: "24px",
+            xl: "48px",
+            gutter: "20px",
+            "container-max": "1200px"
+          },
+          fontFamily: {
+            sans: ["Inter", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #FAFAF7;
+      color: #2C3E50;
+    }
+    .dark body {
+      background-color: #1A252F;
+      color: #ECF0F1;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .heatmap-cell {
+      aspect-ratio: 1/1;
+      border-radius: 4px;
+    }
+    .modal-overlay {
+      background-color: rgba(44, 62, 80, 0.4);
+      backdrop-filter: blur(4px);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background min-h-screen transition-colors duration-200">
+
+  <!-- Top Navigation Header / App Bar (Hidden in Active Mission & Auth) -->
+  <header class="bg-background dark:bg-slate-900 border-b border-outline-variant dark:border-slate-800 sticky top-0 z-40">
+    <div class="flex justify-between items-center w-full px-lg py-md max-w-container-max mx-auto">
+      <div class="flex items-center gap-sm">
+        <img src="app_icon.png" alt="Up7 Logo" class="w-8 h-8 rounded-lg object-cover">
+        <h1 class="font-bold text-headline-md text-primary tracking-tight">Up7</h1>
+      </div>
+      <div class="flex items-center gap-md">
+        <a href="#settings" class="text-on-surface-variant hover:text-primary transition-all duration-150 active:scale-95">
+          <span class="material-symbols-outlined text-2xl" data-icon="settings">settings</span>
+        </a>
+        <div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center border border-primary/20 overflow-hidden">
+          <span class="material-symbols-outlined text-primary font-bold">person</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex max-w-container-max mx-auto min-h-[calc(100vh-65px)]">
+    
+    <!-- Sidebar Navigation (Desktop Only) -->
+    <aside class="hidden md:flex flex-col border-r border-outline-variant dark:border-slate-800 w-[240px] bg-surface-container-lowest dark:bg-slate-900 pt-lg shrink-0">
+      <nav class="flex-1 px-sm space-y-sm">
+        <a href="#dashboard" class="border-l-4 border-primary text-primary font-bold bg-primary-container/10 py-md px-lg flex items-center gap-md transition-all duration-200">
+          <span class="material-symbols-outlined" data-icon="home">home</span>
+          <span class="font-label-md text-label-md">Dashboard</span>
+        </a>
+        <a href="#alarms" class="text-on-surface-variant py-md px-lg flex items-center gap-md hover:bg-surface-container-high transition-colors duration-200">
+          <span class="material-symbols-outlined" data-icon="alarm">alarm</span>
+          <span class="font-label-md text-label-md">Alarms</span>
+        </a>
+        <a href="#birthdays" class="text-on-surface-variant py-md px-lg flex items-center gap-md hover:bg-surface-container-high transition-colors duration-200">
+          <span class="material-symbols-outlined" data-icon="cake">notifications</span>
+          <span class="font-label-md text-label-md">Reminders</span>
+        </a>
+        <a href="#stats" class="text-on-surface-variant py-md px-lg flex items-center gap-md hover:bg-surface-container-high transition-colors duration-200">
+          <span class="material-symbols-outlined" data-icon="equalizer">equalizer</span>
+          <span class="font-label-md text-label-md">Statistics</span>
+        </a>
+        <a href="#settings" class="text-on-surface-variant py-md px-lg flex items-center gap-md hover:bg-surface-container-high transition-colors duration-200">
+          <span class="material-symbols-outlined" data-icon="settings">settings</span>
+          <span class="font-label-md text-label-md">Settings</span>
+        </a>
+      </nav>
+      <div class="p-lg">
+        <button onclick="openAlarmModal()" class="w-full py-md bg-primary text-white rounded-xl font-bold flex items-center justify-center gap-sm active:scale-[0.98] transition-all hover:bg-opacity-90 shadow-sm">
+          <span class="material-symbols-outlined" data-icon="add">add</span>
+          Add Alarm
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Panel -->
+    <main class="flex-grow px-gutter md:px-xl py-lg pb-32">
+
+      <!-- ================================================================= -->
+      <!-- VIEW: AUTHENTICATION -->
+      <!-- ================================================================= -->
+      <section id="page-auth" class="hidden min-h-[80vh] flex items-center justify-center px-sm">
+        <div class="bg-surface-container-lowest dark:bg-slate-800 p-lg md:p-xl rounded-xl shadow-[0px_4px_20px_rgba(44,62,80,0.05)] border border-outline-variant dark:border-slate-700 w-full max-w-[420px] text-center">
+          <div class="flex justify-center mb-md">
+            <div class="w-16 h-16 rounded-2xl bg-primary-container flex items-center justify-center">
+              <span class="material-symbols-outlined text-primary text-[36px]" style="font-variation-settings: 'FILL' 1;">alarm</span>
+            </div>
+          </div>
+          <h2 class="font-bold text-[28px] text-on-background tracking-tight">Welcome to Up7</h2>
+          <p class="font-body-md text-on-surface-variant mt-xs mb-lg">Wake Up. Level Up.</p>
+          
+          <form onsubmit="handleLogin(event)" class="text-left space-y-md">
+            <div>
+              <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-xs">Your Name</label>
+              <input id="login-name" type="text" placeholder="e.g. Julian Sterling" class="w-full h-12 bg-surface dark:bg-slate-900 border-transparent rounded-lg px-md font-body-md focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-surface-container-lowest transition-all" required value="Julian Sterling">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-xs">Email Address</label>
+              <input id="login-email" type="email" placeholder="julian@up7app.io" class="w-full h-12 bg-surface dark:bg-slate-900 border-transparent rounded-lg px-md font-body-md focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-surface-container-lowest transition-all" required value="julian@up7app.io">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-xs">Profession</label>
+              <select id="login-profession" class="w-full h-12 bg-surface dark:bg-slate-900 border-transparent rounded-lg px-md font-body-md focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-surface-container-lowest transition-all text-on-surface">
+                <option value="Software Engineer" selected>Software Engineer</option>
+                <option value="Student">Student</option>
+                <option value="Creative / Artist">Creative / Artist</option>
+                <option value="Entrepreneur / Business">Entrepreneur / Business</option>
+                <option value="Healthcare worker">Healthcare worker</option>
+                <option value="Freelancer">Freelancer</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-xs">Purpose of Alarm (Wake-up Target)</label>
+              <select id="login-purpose" class="w-full h-12 bg-surface dark:bg-slate-900 border-transparent rounded-lg px-md font-body-md focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-surface-container-lowest transition-all text-on-surface">
+                <option value="Gym / Workout" selected>Gym / Workout</option>
+                <option value="Study / Upskilling">Study / Upskilling</option>
+                <option value="Meditation / Mindfulness">Meditation / Mindfulness</option>
+                <option value="Morning Routine">Morning Routine</option>
+                <option value="Work / Commute">Work / Commute</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            
+            <button type="submit" class="w-full h-12 bg-primary text-white font-bold rounded-lg flex items-center justify-center gap-sm hover:bg-opacity-95 transition-all shadow-sm active:scale-98">
+              Sign In to Your Dashboard
+              <span class="material-symbols-outlined text-[20px]">login</span>
+            </button>
+          </form>
+          
+          <p class="text-[11px] text-on-surface-variant/80 mt-lg">All statistics and reminders are stored securely and offline on this browser.</p>
+        </div>
+      </section>
+
+      <!-- ================================================================= -->
+      <!-- VIEW: DASHBOARD -->
+      <!-- ================================================================= -->
+      <section id="page-dashboard" class="hidden space-y-lg">
+        <!-- Greetings and quick motivational tagline -->
+        <div class="flex items-center gap-md">
+          <h2 id="dash-greeting" class="font-bold text-headline-md md:text-display-lg text-on-background">Good Morning, Julian</h2>
+          <span id="dash-greeting-icon" class="material-symbols-outlined text-tertiary text-4xl animate-pulse">wb_sunny</span>
+        </div>
+        <p id="dash-motivation-text" class="font-body-md text-on-surface-variant -mt-2">“Wake Up. Level Up.” Start your day off with intent.</p>
+
+        <!-- Bento Grid Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-lg mt-lg">
+          
+          <!-- Bento Card 1: Next Alarm Widget -->
+          <div id="dash-next-alarm-info" class="lg:col-span-8 bg-surface-container-lowest dark:bg-slate-800 rounded-xl p-lg border border-outline-variant dark:border-slate-700 shadow-[0px_4px_20px_rgba(44,62,80,0.05)] hover:shadow-md transition-shadow">
+            <!-- Dynamically populated via renderDashboard() -->
+          </div>
+
+          <!-- Bento Card 2: Current Streak & Level Widget -->
+          <div class="lg:col-span-4 bg-surface-container-lowest dark:bg-slate-800 rounded-xl p-lg border border-outline-variant dark:border-slate-700 shadow-[0px_4px_20px_rgba(44,62,80,0.05)] flex flex-col justify-between">
+            <div>
+              <span class="font-label-sm text-label-sm uppercase tracking-widest text-on-surface-variant">Daily Wake-up Streak</span>
+              <div class="flex items-center gap-md mt-md">
+                <span class="material-symbols-outlined text-tertiary text-5xl" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+                <div class="flex flex-col">
+                  <span id="dash-streak-count" class="font-bold text-display-lg text-on-background">12</span>
+                  <span class="font-label-md text-label-md text-on-surface-variant -mt-1">Days Strong</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mt-lg">
+              <div class="flex justify-between items-end mb-xs">
+                <span id="dash-level-text" class="font-label-md text-label-md text-on-surface">Level Up</span>
+                <span id="dash-level-ratio" class="font-label-sm text-label-sm text-on-surface-variant font-bold">12/15</span>
+              </div>
+              <div class="w-full h-2.5 bg-primary-container/20 dark:bg-slate-700 rounded-full overflow-hidden">
+                <div id="dash-level-bar" class="h-full bg-primary rounded-full transition-all duration-1000" style="width: 80%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bento Card 3: Birthdays Preview Widget -->
+          <div class="lg:col-span-12">
+            <div class="flex justify-between items-center mb-md">
+              <h3 class="font-bold text-headline-md text-on-surface flex items-center gap-sm">
+                <span class="material-symbols-outlined text-primary">cake</span>
+                Upcoming Birthdays
+              </h3>
+              <a href="#birthdays" class="text-primary font-bold text-label-sm hover:underline">View All</a>
+            </div>
+            <div id="dash-birthdays-container" class="flex overflow-x-auto gap-md pb-md hide-scrollbar">
+              <!-- Dynamically populated via renderDashboard() -->
+            </div>
+          </div>
+
+          <!-- Bento Card 4: Quick Actions Panel -->
+          <div class="lg:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-md">
+            <button onclick="openAlarmModal()" class="bg-surface-container-lowest dark:bg-slate-800 border border-outline-variant dark:border-slate-700 hover:border-primary/50 group transition-all duration-300 p-lg rounded-xl flex items-center justify-between text-left">
+              <div class="flex items-center gap-md">
+                <div class="w-12 h-12 rounded-full bg-primary-container text-on-primary-container group-hover:bg-primary group-hover:text-white flex items-center justify-center transition-colors">
+                  <span class="material-symbols-outlined" data-icon="alarm_add">alarm_add</span>
+                </div>
+                <div>
+                  <span class="font-bold text-body-lg block">Schedule Alarm</span>
+                  <span class="font-label-sm text-on-surface-variant opacity-70">Set up your next morning task</span>
+                </div>
+              </div>
+              <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+            </button>
+
+            <button onclick="openBirthdayModal()" class="bg-surface-container-lowest dark:bg-slate-800 border border-outline-variant dark:border-slate-700 hover:border-primary/50 group transition-all duration-300 p-lg rounded-xl flex items-center justify-between text-left">
+              <div class="flex items-center gap-md">
+                <div class="w-12 h-12 rounded-full bg-primary-container text-on-primary-container group-hover:bg-primary group-hover:text-white flex items-center justify-center transition-colors">
+                  <span class="material-symbols-outlined" data-icon="cake">cake</span>
+                </div>
+                <div>
+                  <span class="font-bold text-body-lg block">Add Birthday</span>
+                  <span class="font-label-sm text-on-surface-variant opacity-70">Keep track of upcoming celebrations</span>
+                </div>
+              </div>
+              <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+            </button>
+
+            <button onclick="openTaskModal()" class="bg-surface-container-lowest dark:bg-slate-800 border border-outline-variant dark:border-slate-700 hover:border-primary/50 group transition-all duration-300 p-lg rounded-xl flex items-center justify-between text-left">
+              <div class="flex items-center gap-md">
+                <div class="w-12 h-12 rounded-full bg-primary-container text-on-primary-container group-hover:bg-primary group-hover:text-white flex items-center justify-center transition-colors">
+                  <span class="material-symbols-outlined" data-icon="notifications_active">notifications_active</span>
+                </div>
+                <div>
+                  <span class="font-bold text-body-lg block">Set Task Reminder</span>
+                  <span class="font-label-sm text-on-surface-variant opacity-70">Loud custom alert notifications</span>
+                </div>
+              </div>
+              <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ================================================================= -->
+      <!-- VIEW: ALARMS MANAGEMENT -->
+      <!-- ================================================================= -->
+      <section id="page-alarms" class="hidden space-y-lg">
+        <div class="flex justify-between items-end mb-lg">
+          <div>
+            <h2 class="font-bold text-headline-md text-on-background">Morning Alarms</h2>
+            <p class="font-body-md text-on-surface-variant">Configure wake-up missions to start your day.</p>
+          </div>
+          <button onclick="openAlarmModal()" class="flex items-center gap-sm bg-primary text-white px-lg py-md rounded-xl font-bold hover:bg-opacity-95 transition-all shadow-sm active:scale-95">
+            <span class="material-symbols-outlined">add</span>
+            Add Alarm
+          </button>
+        </div>
+
+        <!-- Alarms Grid -->
+        <div id="alarms-list" class="grid grid-cols-1 lg:grid-cols-2 gap-lg">
+          <!-- Dynamically populated via renderAlarms() -->
+        </div>
+
+        <!-- Info alert block -->
+        <div class="bg-primary-container/20 border border-primary/20 rounded-xl p-md flex items-start gap-md mt-lg">
+          <span class="material-symbols-outlined text-primary text-2xl mt-0.5">lightbulb</span>
+          <div>
+            <h4 class="font-bold text-label-md text-primary">Wake-up Mission Tip</h4>
+            <p class="font-body-md text-on-surface text-sm mt-0.5 leading-relaxed">
+              Step challenge requires device movement/tap. QR challenge triggers your device camera. Start with step challenge if you want a soft wake up!
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================= -->
+      <!-- VIEW: BIRTHDAY REMINDERS -->
+      <!-- ================================================================= -->
+      <section id="page-birthdays" class="hidden space-y-lg">
+        <div class="flex justify-between items-end mb-lg">
+          <div>
+            <h2 class="font-bold text-headline-md text-on-background">Reminders & Tasks</h2>
+            <p class="font-body-md text-on-surface-variant">Celebrate birthdays and track your scheduled reminders.</p>
+          </div>
+          <button id="bday-header-btn" onclick="openBirthdayModal()" class="flex items-center gap-sm bg-primary text-white px-lg py-md rounded-xl font-bold hover:bg-opacity-95 transition-all shadow-sm active:scale-95">
+            <span class="material-symbols-outlined">add</span>
+            Add Birthday
+          </button>
+          <button id="task-header-btn" onclick="openTaskModal()" class="hidden flex items-center gap-sm bg-primary text-white px-lg py-md rounded-xl font-bold hover:bg-opacity-95 transition-all shadow-sm active:scale-95">
+            <span class="material-symbols-outlined">add</span>
+            Add Task Reminder
+          </button>
+        </div>
+
+        <!-- Reminders Tabs Selector -->
+        <div class="flex gap-md border-b border-outline-variant/40 pb-sm overflow-x-auto hide-scrollbar whitespace-nowrap">
+          <button onclick="showReminderTab('birthdays')" id="btn-tab-birthdays" class="font-bold text-body-lg text-primary border-b-2 border-primary pb-xs focus:outline-none shrink-0">Birthdays</button>
+          <button onclick="showReminderTab('tasks')" id="btn-tab-tasks" class="font-bold text-body-lg text-on-surface-variant hover:text-primary pb-xs transition-colors focus:outline-none shrink-0">Task Reminders</button>
+        </div>
+
+        <!-- Section 1: Birthdays Tab -->
+        <div id="reminders-birthdays-section" class="space-y-lg">
+          <h3 class="font-bold text-label-sm uppercase tracking-wider text-tertiary mb-xs mt-md">Upcoming This Month</h3>
+          <div id="birthdays-this-month" class="grid grid-cols-1 md:grid-cols-3 gap-lg">
+            <!-- Dynamically populated via renderBirthdays() -->
+          </div>
+
+          <div class="mt-lg">
+            <h3 class="font-bold text-label-sm uppercase tracking-wider text-on-surface-variant mb-md">All Birthday Reminders</h3>
+            <div id="birthdays-list" class="grid grid-cols-1 md:grid-cols-2 gap-md">
+              <!-- Dynamically populated via renderBirthdays() -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Task Reminders Tab -->
+        <div id="reminders-tasks-section" class="hidden space-y-md mt-md">
+          <h3 class="font-bold text-label-sm uppercase tracking-wider text-on-surface-variant mb-md">All Task Reminders</h3>
+          <div id="tasks-list" class="grid grid-cols-1 md:grid-cols-2 gap-md">
+            <!-- Dynamically populated via renderTasks() -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================= -->
+      <!-- VIEW: STATISTICS -->
+      <!-- ================================================================= -->
+      <section id="page-stats" class="hidden space-y-lg">
+        <div>
+          <h2 class="font-bold text-headline-md text-on-background">Your Statistics</h2>
+          <p class="font-body-md text-on-surface-variant">Track your consistency streaks and milestones.</p>
+        </div>
+
+        <!-- Stat Widgets Bento Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-lg">
+          
+          <!-- Heatmap Consistency Calendar -->
+          <div class="md:col-span-8 bg-surface-container-lowest dark:bg-slate-800 border border-outline-variant dark:border-slate-700 p-lg rounded-xl shadow-[0px_4px_20px_rgba(44,62,80,0.05)]">
+            <div class="flex justify-between items-center mb-md">
+              <h3 class="font-bold text-label-sm text-on-surface-variant uppercase tracking-wider">Consistency (Last 28 Days)</h3>
+              <span class="material-symbols-outlined text-outline">calendar_month</span>
+            </div>
+            
+            <div id="stats-heatmap" class="grid grid-cols-7 gap-2">
+              <!-- Heatmap cells dynamically populated via renderStats() -->
+            </div>
+
+            <div class="mt-md flex items-center justify-between font-label-sm text-label-sm text-on-surface-variant">
+              <span>Past Weeks</span>
+              <div class="flex gap-2 items-center">
+                <span class="text-[10px]">Missed</span>
+                <div class="w-3 h-3 bg-surface-variant dark:bg-slate-700 rounded"></div>
+                <div class="w-3 h-3 bg-primary rounded"></div>
+                <span class="text-[10px]">Woke up</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Total Completes & Longest Streak side cards -->
+          <div class="md:col-span-4 flex flex-col gap-md">
+            <div class="bg-surface-container-lowest dark:bg-slate-800 border border-outline-variant dark:border-slate-700 p-md rounded-xl shadow-[0px_4px_20px_rgba(44,62,80,0.05)]">
+              <span class="material-symbols-outlined text-primary text-3xl mb-xs">alarm_on</span>
+              <p class="font-label-sm text-label-sm text-on-surface-variant">Total Alarms Completed</p>
+              <p id="stats-total-completed" class="font-bold text-headline-md text-on-background mt-1">142</p>
+            </div>
+            <div class="bg-surface-container-lowest dark:bg-slate-800 border border-outline-variant dark:border-slate-700 p-md rounded-xl shadow-[0px_4px_20px_rgba(44,62,80,0.05)]">
+              <span class="material-symbols-outlined text-tertiary text-3xl mb-xs">military_tech</span>
+              <p class="font-label-sm text-label-sm text-on-surface-variant">Longest Wake-up Streak</p>
+              <p id="stats-longest-streak" class="font-bold text-headline-md text-on-background mt-1">45 Days</p>
+            </div>
+            <div class="bg-surface-container-lowest dark:bg-slate-800 border border-outline-variant dark:border-slate-700 p-md rounded-xl shadow-[0px_4px_20px_rgba(44,62,80,0.05)]">
+              <span class="material-symbols-outlined text-primary text-3xl mb-xs">extension</span>
+              <p class="font-label-sm text-label-sm text-on-surface-variant">Missions Solved</p>
+              <p id="stats-missions-solved" class="font-bold text-headline-md text-on-background mt-1">120</p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Hardcoded dynamic chart design simulating wake up times -->
+        <div class="bg-surface-container-lowest dark:bg-slate-800 border border-outline-variant dark:border-slate-700 rounded-xl p-lg shadow-[0px_4px_20px_rgba(44,62,80,0.05)]">
+          <div class="flex justify-between items-center mb-md">
+            <div>
+              <h3 class="font-bold text-headline-md text-on-background">Weekly Wake-up Times</h3>
+              <p class="font-body-md text-on-surface-variant">Average wake up time: 6:42 AM</p>
+            </div>
+            <div class="px-md py-1 border border-outline-variant rounded-full text-xs font-semibold text-on-surface-variant">
+              This Week
+            </div>
+          </div>
+          
+          <div class="relative h-48 flex items-end justify-between gap-sm pt-md border-b border-outline-variant/30">
+            <!-- Grid Lines -->
+            <div class="absolute inset-0 flex flex-col justify-between pointer-events-none pb-[2px]">
+              <div class="w-full border-t border-outline-variant/10 text-[10px] text-outline pt-1 uppercase">8:00 AM</div>
+              <div class="w-full border-t border-outline-variant/10 text-[10px] text-outline pt-1 uppercase">7:00 AM</div>
+              <div class="w-full border-t border-outline-variant/10 text-[10px] text-outline pt-1 uppercase">6:00 AM</div>
+            </div>
+            <!-- Bars -->
+            <div class="group relative flex-1 flex flex-col items-center gap-sm z-10">
+              <div class="w-full max-w-[40px] bg-primary-container/40 group-hover:bg-primary-container rounded-t transition-all" style="height: 60%;"></div>
+              <span class="font-label-sm text-xs text-on-surface-variant">M</span>
+            </div>
+            <div class="group relative flex-1 flex flex-col items-center gap-sm z-10">
+              <div class="w-full max-w-[40px] bg-primary rounded-t transition-all" style="height: 85%;"></div>
+              <span class="font-label-sm text-xs text-on-surface-variant">T</span>
+            </div>
+            <div class="group relative flex-1 flex flex-col items-center gap-sm z-10">
+              <div class="w-full max-w-[40px] bg-primary rounded-t transition-all" style="height: 82%;"></div>
+              <span class="font-label-sm text-xs text-on-surface-variant">W</span>
+            </div>
+            <div class="group relative flex-1 flex flex-col items-center gap-sm z-10">
+              <div class="w-full max-w-[40px] bg-primary-container/40 group-hover:bg-primary-container rounded-t transition-all" style="height: 45%;"></div>
+              <span class="font-label-sm text-xs text-on-surface-variant">T</span>
+            </div>
+            <div class="group relative flex-1 flex flex-col items-center gap-sm z-10">
+              <div class="w-full max-w-[40px] bg-primary rounded-t transition-all" style="height: 90%;"></div>
+              <span class="font-label-sm text-xs text-on-surface-variant">F</span>
+            </div>
+            <div class="group relative flex-1 flex flex-col items-center gap-sm z-10">
+              <div class="w-full max-w-[40px] bg-tertiary rounded-t transition-all" style="height: 30%;"></div>
+              <span class="font-label-sm text-xs text-on-surface-variant">S</span>
+            </div>
+            <div class="group relative flex-1 flex flex-col items-center gap-sm z-10">
+              <div class="w-full max-w-[40px] bg-tertiary rounded-t transition-all" style="height: 25%;"></div>
+              <span class="font-label-sm text-xs text-on-surface-variant">S</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================= -->
+      <!-- VIEW: SETTINGS & PROFILE -->
+      <!-- ================================================================= -->
+      <section id="page-settings" class="hidden space-y-lg">
+        
+        <!-- Profile Banner -->
+        <div class="bg-surface-container-lowest dark:bg-slate-800 border border-outline-variant dark:border-slate-700 rounded-xl p-lg flex flex-col md:flex-row items-center gap-lg shadow-[0px_4px_20px_rgba(44,62,80,0.05)]">
+          <div class="relative w-24 h-24 rounded-full bg-primary-container flex items-center justify-center border-4 border-primary text-primary">
+            <span class="material-symbols-outlined text-5xl">person</span>
+          </div>
+          <div class="text-center md:text-left flex-grow">
+            <h2 id="settings-profile-name" class="font-bold text-headline-md text-on-surface">Julian Sterling</h2>
+            <p id="settings-profile-email" class="font-body-md text-on-surface-variant">julian@up7app.io</p>
+            <div class="mt-md flex flex-wrap gap-sm justify-center md:justify-start">
+              <span class="px-md py-1 bg-primary-container text-primary rounded-full font-label-sm text-xs font-semibold">Self-Hosted Auth</span>
+              <span id="settings-profile-profession" class="px-md py-1 bg-primary-container text-primary rounded-full font-label-sm text-xs font-semibold">Software Engineer</span>
+              <span id="settings-profile-purpose" class="px-md py-1 bg-tertiary-container/30 text-on-tertiary-container rounded-full font-label-sm text-xs font-semibold">Wake-up: Gym / Workout</span>
+              <span id="settings-streak-badge" class="px-md py-1 bg-surface-container-high text-on-surface-variant rounded-full font-label-sm text-xs">Active 12d streak</span>
+            </div>
+          </div>
+          <button onclick="handleLogout()" class="mt-md md:mt-0 px-lg py-md bg-error-container text-on-error-container font-semibold rounded-xl text-sm flex items-center gap-sm hover:opacity-90 active:scale-95 transition-all">
+            <span class="material-symbols-outlined">logout</span>
+            Log Out
+          </button>
+        </div>
+
+        <!-- Options Container -->
+        <div class="space-y-lg mt-lg">
+          
+          <!-- Appearance Mode -->
+          <div class="bg-surface-container-lowest dark:bg-slate-800 border border-outline-variant dark:border-slate-700 p-md rounded-xl flex items-center justify-between shadow-sm">
+            <div class="flex items-center gap-md">
+              <div class="w-10 h-10 bg-primary-container/20 rounded-lg flex items-center justify-center text-primary">
+                <span class="material-symbols-outlined">palette</span>
+              </div>
+              <div class="text-left">
+                <p class="font-bold text-body-md">Theme Mode</p>
+                <p class="text-xs text-on-surface-variant">Toggle light and dark appearance</p>
+              </div>
+            </div>
+            <button onclick="toggleThemeMode()" id="settings-theme-toggle" class="p-sm rounded-full bg-surface-container-high text-on-surface-variant hover:bg-surface-variant transition-all duration-200">
+              <span class="material-symbols-outlined">dark_mode</span>
+            </button>
+          </div>
+
+          <!-- Difficulty Settings -->
+          <div class="bg-surface-container-lowest dark:bg-slate-800 border border-outline-variant dark:border-slate-700 p-md rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-md shadow-sm">
+            <div class="flex items-center gap-md">
+              <div class="w-10 h-10 bg-primary-container/20 rounded-lg flex items-center justify-center text-primary">
+                <span class="material-symbols-outlined">extension</span>
+              </div>
+              <div class="text-left">
+                <p class="font-bold text-body-md">Math Challenge Difficulty</p>
+                <p class="text-xs text-on-surface-variant">Changes complexity of alarm equations</p>
+              </div>
+            </div>
+            <select id="settings-difficulty" onchange="handleDifficultyChange(this.value)" class="h-10 bg-surface dark:bg-slate-900 border-none rounded-lg font-body-md text-sm px-md focus:ring-2 focus:ring-primary w-full md:w-48">
+              <option value="easy">Easy (Summations)</option>
+              <option value="medium" selected>Medium (Mix +/-)</option>
+              <option value="hard">Hard (Multiply/Plus)</option>
+            </select>
+          </div>
+
+          <!-- Snooze Preferences -->
+          <div class="bg-surface-container-lowest dark:bg-slate-800 border border-outline-variant dark:border-slate-700 p-md rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-md shadow-sm">
+            <div class="flex items-center gap-md">
+              <div class="w-10 h-10 bg-primary-container/20 rounded-lg flex items-center justify-center text-primary">
+                <span class="material-symbols-outlined">snooze</span>
+              </div>
+              <div class="text-left">
+                <p class="font-bold text-body-md">Snooze Duration</p>
+                <p class="text-xs text-on-surface-variant">Time added when snoozing mission</p>
+              </div>
+            </div>
+            <select id="settings-snooze-duration" onchange="handleSnoozeChange(this.value)" class="h-10 bg-surface dark:bg-slate-900 border-none rounded-lg font-body-md text-sm px-md focus:ring-2 focus:ring-primary w-full md:w-48">
+              <option value="3">3 minutes</option>
+              <option value="5" selected>5 minutes</option>
+              <option value="10">10 minutes</option>
+              <option value="15">15 minutes</option>
+            </select>
+          </div>
+
+          <!-- Volume Controls -->
+          <div class="bg-surface-container-lowest dark:bg-slate-800 border border-outline-variant dark:border-slate-700 p-md rounded-xl space-y-md shadow-sm">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-md">
+                <div class="w-10 h-10 bg-primary-container/20 rounded-lg flex items-center justify-center text-primary">
+                  <span class="material-symbols-outlined">volume_up</span>
+                </div>
+                <div class="text-left">
+                  <p class="font-bold text-body-md">Alarm Alarm Volume</p>
+                  <p class="text-xs text-on-surface-variant">Melody volume on trigger</p>
+                </div>
+              </div>
+              <span id="settings-volume-value" class="text-primary font-bold">80%</span>
+            </div>
+            <input id="settings-volume" oninput="handleVolumeChange(this.value)" type="range" min="0" max="100" value="80" class="w-full h-2 bg-surface-container-high dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-primary" />
+          </div>
+
+          <!-- Install PWA -->
+          <div id="pwa-install-container" class="flex p-lg border border-dashed border-primary/40 rounded-xl bg-primary-container/10 flex-col md:flex-row items-center justify-between gap-md">
+            <div>
+              <h4 class="font-bold text-body-lg text-primary">Install Up7 App</h4>
+              <p class="text-xs text-on-surface-variant mt-1">Install to your phone or desktop screen for offline alarms and push reminders.</p>
+            </div>
+            <button onclick="handleInstallPWAClick()" class="bg-primary text-white py-md px-lg font-bold rounded-xl active:scale-95 transition-all text-sm hover:bg-opacity-95 shadow-sm">
+              Install PWA
+            </button>
+          </div>
+
+          <p class="text-center text-xs text-on-surface-variant mt-xl">Up7 v1.0.0 (Offline-First Stable)</p>
+        </div>
+
+      </section>
+
+      <!-- ================================================================= -->
+      <!-- VIEW: ACTIVE WAKEUP MISSION (FULL SCREEN OVERLAY) -->
+      <!-- ================================================================= -->
+      <section id="page-active-mission" class="hidden min-h-screen w-full flex items-center justify-center bg-radial-gradient from-background to-primary-container/30 dark:from-slate-900 dark:to-slate-950 p-gutter">
+        <div class="w-full max-w-[450px] bg-surface-container-lowest dark:bg-slate-800 border border-outline-variant dark:border-slate-700 rounded-xl p-lg shadow-xl text-center space-y-lg">
+          
+          <div class="flex justify-center">
+            <div class="w-16 h-16 rounded-full bg-primary-container flex items-center justify-center text-primary animate-bounce">
+              <span id="mission-icon" class="material-symbols-outlined text-[36px]" style="font-variation-settings: 'FILL' 1;">calculate</span>
+            </div>
+          </div>
+          
+          <div>
+            <h2 id="mission-title" class="font-bold text-display-lg-mobile text-on-background">Wake Up!</h2>
+            <p id="mission-desc" class="font-body-lg text-on-surface-variant">Complete your challenge to dismiss the alarm.</p>
+          </div>
+
+          <!-- CHALLENGE: MATH -->
+          <div id="challenge-math" class="hidden space-y-md p-md bg-surface dark:bg-slate-900 rounded-lg border border-outline-variant dark:border-slate-800">
+            <div class="flex items-center justify-center gap-md">
+              <span id="math-expression" class="font-bold text-display-lg text-primary tracking-wider">24 + 17 - 5</span>
+              <span class="font-bold text-display-lg text-outline-variant">=</span>
+              <span class="font-bold text-display-lg text-primary">?</span>
+            </div>
+            <div class="mt-md">
+              <input id="math-input" type="number" placeholder="Enter total" class="w-full h-12 bg-surface-container-lowest dark:bg-slate-800 border-2 border-transparent rounded-lg px-md font-bold text-headline-md text-center focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-surface-container-lowest transition-all" />
+            </div>
+            <button onclick="submitMathAnswer()" class="w-full h-12 bg-primary text-white font-bold rounded-lg flex items-center justify-center gap-sm active:scale-95 transition-all">
+              Submit Answer
+              <span class="material-symbols-outlined text-[20px]">check</span>
+            </button>
+          </div>
+
+          <!-- CHALLENGE: QR CODE -->
+          <div id="challenge-qr" class="hidden space-y-md p-md bg-surface dark:bg-slate-900 rounded-lg border border-outline-variant dark:border-slate-800">
+            <div class="relative w-full aspect-video rounded-lg overflow-hidden bg-black flex items-center justify-center">
+              <video id="qr-video" class="absolute inset-0 w-full h-full object-cover"></video>
+              <div class="absolute inset-0 border-4 border-dashed border-primary m-md pointer-events-none rounded opacity-60"></div>
+              <div class="absolute bg-black/60 text-white text-[11px] py-1 px-md rounded bottom-2">Up7 Simulator camera feed</div>
+            </div>
+            <p id="qr-status" class="text-xs text-on-surface-variant font-medium">Scanning for QR target...</p>
+            <button onclick="completeMissionSuccess()" class="w-full h-12 bg-primary-container text-primary font-bold rounded-lg flex items-center justify-center gap-sm active:scale-95 transition-all">
+              Skip / Simulate QR Read
+              <span class="material-symbols-outlined text-[20px]">qr_code</span>
+            </button>
+          </div>
+
+          <!-- CHALLENGE: STEP COUNTER -->
+          <div id="challenge-step" class="hidden space-y-md p-lg bg-surface dark:bg-slate-900 rounded-lg border border-outline-variant dark:border-slate-800 text-center">
+            <span class="material-symbols-outlined text-primary text-[48px] animate-pulse">directions_run</span>
+            <p id="step-text" class="font-bold text-body-lg">0 / 30 steps completed</p>
+            
+            <div class="w-full h-3 bg-primary-container/20 dark:bg-slate-700 rounded-full overflow-hidden">
+              <div id="step-progress-bar" class="h-full bg-primary rounded-full transition-all duration-300" style="width: 0%;"></div>
+            </div>
+            <p class="text-xs text-on-surface-variant">Shake your device or tap the button below rapidly to simulate morning steps.</p>
+            
+            <button onclick="simulateStep()" class="w-full h-12 bg-primary text-white font-bold rounded-lg flex items-center justify-center gap-sm active:scale-95 transition-all">
+              Take Step (+1)
+              <span class="material-symbols-outlined text-[20px]">play_arrow</span>
+            </button>
+          </div>
+
+          <!-- General Dismiss/Snooze footer actions -->
+          <div class="flex gap-md pt-lg">
+            <button onclick="snoozeActiveAlarm()" class="flex-1 h-12 bg-transparent border border-primary text-primary font-bold rounded-lg flex items-center justify-center gap-sm active:scale-95 transition-all hover:bg-primary-container/10">
+              Snooze (+5m)
+              <span class="material-symbols-outlined text-[20px]">alarm_on</span>
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Mobile Bottom Navigation Bar (Hidden in Active Mission & Auth) -->
+  <nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-gutter py-sm pb-safe bg-surface dark:bg-slate-900 border-t border-outline-variant dark:border-slate-800 shadow-[0px_-4px_20px_rgba(44,62,80,0.05)] z-40 rounded-t-xl">
+    <a href="#dashboard" class="flex flex-col items-center justify-center bg-primary-container dark:bg-slate-800 text-on-primary-container dark:text-primary-fixed rounded-full px-4 py-1 active:scale-95 transition-all duration-150">
+      <span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+      <span class="font-label-sm text-[11px] mt-0.5">Home</span>
+    </a>
+    <a href="#alarms" class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:text-primary active:scale-95 transition-all duration-150">
+      <span class="material-symbols-outlined" data-icon="alarm">alarm</span>
+      <span class="font-label-sm text-[11px] mt-0.5">Alarms</span>
+    </a>
+    <a href="#birthdays" class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:text-primary active:scale-95 transition-all duration-150">
+      <span class="material-symbols-outlined" data-icon="cake">notifications</span>
+      <span class="font-label-sm text-[11px] mt-0.5">Reminders</span>
+    </a>
+    <a href="#stats" class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:text-primary active:scale-95 transition-all duration-150">
+      <span class="material-symbols-outlined" data-icon="equalizer">equalizer</span>
+      <span class="font-label-sm text-[11px] mt-0.5">Stats</span>
+    </a>
+  </nav>
+
+  <!-- ================================================================= -->
+  <!-- MODAL: ADD/EDIT ALARM -->
+  <!-- ================================================================= -->
+  <div id="alarmModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+    <div class="modal-overlay absolute inset-0" onclick="closeAlarmModal()"></div>
+    <div class="bg-surface-container-lowest dark:bg-slate-800 w-[92%] max-w-[450px] rounded-2xl shadow-xl relative z-10 p-lg md:p-xl border border-outline-variant dark:border-slate-700">
+      
+      <div class="flex justify-between items-center mb-md">
+        <h3 id="alarm-modal-title" class="font-bold text-headline-md">New Alarm</h3>
+        <button onclick="closeAlarmModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      
+      <form onsubmit="saveAlarm(event)" class="space-y-md">
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-xs">Alarm Time</label>
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-md">
+            <div class="flex items-center gap-xs">
+              <!-- Hour Input -->
+              <div class="w-20">
+                <input id="alarm-hour" type="number" min="1" max="12" value="7" class="w-full h-12 bg-surface dark:bg-slate-900 border-none rounded-lg focus:ring-2 focus:ring-primary font-bold text-headline-md text-center px-sm" required />
+                <span class="block text-[10px] text-center text-on-surface-variant mt-1">Hour</span>
+              </div>
+              
+              <span class="font-bold text-headline-md text-outline-variant px-1">:</span>
+
+              <!-- Minute Input -->
+              <div class="w-20">
+                <input id="alarm-minute" type="number" min="0" max="59" value="00" class="w-full h-12 bg-surface dark:bg-slate-900 border-none rounded-lg focus:ring-2 focus:ring-primary font-bold text-headline-md text-center px-sm" required />
+                <span class="block text-[10px] text-center text-on-surface-variant mt-1">Minute</span>
+              </div>
+            </div>
+
+            <!-- Hidden fallback radios for JS compatibility -->
+            <input type="radio" name="alarm-period-radio" id="alarm-period-am" value="AM" class="hidden" checked />
+            <input type="radio" name="alarm-period-radio" id="alarm-period-pm" value="PM" class="hidden" />
+
+            <!-- Custom Segmented Selector for Morning (AM) / Night (PM) -->
+            <div class="flex bg-surface dark:bg-slate-900 p-[2px] rounded-lg border border-outline-variant dark:border-slate-800 shrink-0 select-none sm:ml-auto w-full sm:w-auto">
+              <button type="button" id="btn-period-am" onclick="selectPeriod('AM')" class="flex-1 sm:flex-none px-3 py-1.5 rounded font-bold text-xs transition-all bg-primary text-white shadow-sm">Morning (AM)</button>
+              <button type="button" id="btn-period-pm" onclick="selectPeriod('PM')" class="flex-1 sm:flex-none px-3 py-1.5 rounded font-bold text-xs transition-all text-on-surface-variant hover:text-primary">Night (PM)</button>
+            </div>
+          </div>
+          <!-- Hidden fallback input so that we don't break database saving references -->
+          <input type="hidden" id="alarm-time" value="07:00" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-xs">Alarm Period Preset</label>
+          <div class="flex gap-sm">
+            <button type="button" onclick="setAlarmPeriodPreset('morning')" id="btn-preset-morning" class="flex-1 py-2 bg-primary text-white border border-primary font-semibold rounded-lg text-xs hover:bg-opacity-95 transition-all">Morning Preset</button>
+            <button type="button" onclick="setAlarmPeriodPreset('night')" id="btn-preset-night" class="flex-1 py-2 bg-transparent text-primary border border-primary font-semibold rounded-lg text-xs hover:bg-primary-container/10 transition-all">Night Preset</button>
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-xs">Label (Optional)</label>
+          <input id="alarm-label" type="text" placeholder="e.g. Wake Up for Gym" class="w-full h-12 bg-surface dark:bg-slate-900 border-none rounded-lg focus:ring-2 focus:ring-primary font-body-md px-md" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-xs">Wake-up Mission</label>
+          <select id="alarm-mission-select" class="w-full h-12 bg-surface dark:bg-slate-900 border-none rounded-lg focus:ring-2 focus:ring-primary font-body-md px-md">
+            <option value="math">Math Challenge</option>
+            <option value="qr">QR Code Scan</option>
+            <option value="step">Step Counter Challenge</option>
+            <option value="random">Random Mission Mode</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-sm">Repeat Days</label>
+          <div class="grid grid-cols-7 gap-sm">
+            <label class="flex flex-col items-center gap-xs cursor-pointer text-[10px] font-bold text-on-surface-variant">
+              <input type="checkbox" class="day-checkbox rounded border-outline-variant text-primary focus:ring-primary w-5 h-5" value="1" />
+              <span>Mon</span>
+            </label>
+            <label class="flex flex-col items-center gap-xs cursor-pointer text-[10px] font-bold text-on-surface-variant">
+              <input type="checkbox" class="day-checkbox rounded border-outline-variant text-primary focus:ring-primary w-5 h-5" value="2" />
+              <span>Tue</span>
+            </label>
+            <label class="flex flex-col items-center gap-xs cursor-pointer text-[10px] font-bold text-on-surface-variant">
+              <input type="checkbox" class="day-checkbox rounded border-outline-variant text-primary focus:ring-primary w-5 h-5" value="3" />
+              <span>Wed</span>
+            </label>
+            <label class="flex flex-col items-center gap-xs cursor-pointer text-[10px] font-bold text-on-surface-variant">
+              <input type="checkbox" class="day-checkbox rounded border-outline-variant text-primary focus:ring-primary w-5 h-5" value="4" />
+              <span>Thu</span>
+            </label>
+            <label class="flex flex-col items-center gap-xs cursor-pointer text-[10px] font-bold text-on-surface-variant">
+              <input type="checkbox" class="day-checkbox rounded border-outline-variant text-primary focus:ring-primary w-5 h-5" value="5" />
+              <span>Fri</span>
+            </label>
+            <label class="flex flex-col items-center gap-xs cursor-pointer text-[10px] font-bold text-on-surface-variant">
+              <input type="checkbox" class="day-checkbox rounded border-outline-variant text-primary focus:ring-primary w-5 h-5" value="6" />
+              <span>Sat</span>
+            </label>
+            <label class="flex flex-col items-center gap-xs cursor-pointer text-[10px] font-bold text-on-surface-variant">
+              <input type="checkbox" class="day-checkbox rounded border-outline-variant text-primary focus:ring-primary w-5 h-5" value="0" />
+              <span>Sun</span>
+            </label>
+          </div>
+        </div>
+
+        <button type="submit" class="w-full h-12 bg-primary text-white font-bold rounded-xl flex items-center justify-center gap-sm hover:bg-opacity-95 transition-all shadow-sm mt-lg">
+          Save Alarm Preference
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- MODAL: ADD/EDIT BIRTHDAY -->
+  <!-- ================================================================= -->
+  <div id="birthdayModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+    <div class="modal-overlay absolute inset-0" onclick="closeBirthdayModal()"></div>
+    <div class="bg-surface-container-lowest dark:bg-slate-800 w-[92%] max-w-[450px] rounded-2xl shadow-xl relative z-10 p-lg md:p-xl border border-outline-variant dark:border-slate-700">
+      
+      <div class="flex justify-between items-center mb-md">
+        <h3 id="birthday-modal-title" class="font-bold text-headline-md">New Birthday</h3>
+        <button onclick="closeBirthdayModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      
+      <form onsubmit="saveBirthday(event)" class="space-y-md">
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-xs">Celebrating Name</label>
+          <input id="b-name" type="text" placeholder="e.g. Sarah Jenkins" class="w-full h-12 bg-surface dark:bg-slate-900 border-none rounded-lg focus:ring-2 focus:ring-primary font-body-md px-md" required />
+        </div>
+        
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-xs">Birth Date</label>
+          <input id="b-date" type="date" class="w-full h-12 bg-surface dark:bg-slate-900 border-none rounded-lg focus:ring-2 focus:ring-primary font-body-md px-md" required />
+        </div>
+
+        <div class="space-y-sm">
+          <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Reminder Preferences</label>
+          <label class="flex items-center gap-md cursor-pointer font-body-md text-sm">
+            <input id="b-notify-week" type="checkbox" class="rounded border-outline-variant text-primary focus:ring-primary w-5 h-5" checked />
+            <span>Notify me 1 week before</span>
+          </label>
+          <label class="flex items-center gap-md cursor-pointer font-body-md text-sm">
+            <input id="b-notify-day" type="checkbox" class="rounded border-outline-variant text-primary focus:ring-primary w-5 h-5" checked />
+            <span>Notify me on the actual day</span>
+          </label>
+        </div>
+
+        <div class="flex gap-md pt-md">
+          <button id="b-delete-btn" type="button" onclick="deleteActiveBirthday()" class="hidden flex-1 h-12 bg-error-container text-on-error-container font-semibold rounded-xl text-sm flex items-center justify-center gap-sm active:scale-95 transition-all">
+            Delete
+          </button>
+          <button type="submit" class="flex-2 w-full h-12 bg-primary text-white font-bold rounded-xl flex items-center justify-center gap-sm hover:bg-opacity-95 transition-all shadow-sm">
+            Save Reminder
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- MODAL: ADD/EDIT TASK REMINDER -->
+  <!-- ================================================================= -->
+  <div id="taskModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+    <div class="modal-overlay absolute inset-0" onclick="closeTaskModal()"></div>
+    <div class="bg-surface-container-lowest dark:bg-slate-800 w-[92%] max-w-[450px] rounded-2xl shadow-xl relative z-10 p-lg md:p-xl border border-outline-variant dark:border-slate-700">
+      
+      <div class="flex justify-between items-center mb-md">
+        <h3 id="task-modal-title" class="font-bold text-headline-md">New Task Reminder</h3>
+        <button onclick="closeTaskModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      
+      <form onsubmit="saveTask(event)" class="space-y-md">
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-xs">Reminder Task</label>
+          <input id="task-title" type="text" placeholder="e.g. Drink Water / Gym / Call Mom" class="w-full h-12 bg-surface dark:bg-slate-900 border-none rounded-lg focus:ring-2 focus:ring-primary font-body-md px-md" required />
+        </div>
+        
+        <div class="grid grid-cols-2 gap-sm">
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-xs">Reminder Date</label>
+            <input id="task-date" type="date" class="w-full h-12 bg-surface dark:bg-slate-900 border-none rounded-lg focus:ring-2 focus:ring-primary font-body-md px-md" required />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-xs">Reminder Time</label>
+            <input id="task-time" type="time" class="w-full h-12 bg-surface dark:bg-slate-900 border-none rounded-lg focus:ring-2 focus:ring-primary font-body-md px-md" required />
+          </div>
+        </div>
+
+        <div class="flex gap-md pt-md">
+          <button id="task-delete-btn" type="button" onclick="deleteActiveTask()" class="hidden flex-1 h-12 bg-error-container text-on-error-container font-semibold rounded-xl text-sm flex items-center justify-center gap-sm active:scale-95 transition-all">
+            Delete
+          </button>
+          <button type="submit" class="flex-2 w-full h-12 bg-primary text-white font-bold rounded-xl flex items-center justify-center gap-sm hover:bg-opacity-95 transition-all shadow-sm">
+            Save Reminder
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Fullscreen micro-interaction alert feedback layer -->
+  <div id="feedback-overlay" class="fixed inset-0 z-50 pointer-events-none hidden transition-opacity duration-300 flex items-center justify-center opacity-0 bg-transparent">
+    <div id="feedback-content" class="p-xl rounded-xl bg-surface-container-lowest dark:bg-slate-800 shadow-2xl flex flex-col items-center transform scale-90 transition-transform duration-300 border border-outline-variant dark:border-slate-700">
+      <span id="feedback-icon" class="material-symbols-outlined"></span>
+      <p id="feedback-text" class="font-bold text-headline-md"></p>
+    </div>
+  </div>
+
+  <!-- Load core JS script -->
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{
+  "name": "Up7 - Wake Up. Level Up.",
+  "short_name": "Up7",
+  "description": "Up7 is a mission-based alarm and reminder platform that helps you wake up, build daily streaks, and remember birthdays.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#FAFAF7",
+  "theme_color": "#5DADE2",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "app_icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "app_icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
